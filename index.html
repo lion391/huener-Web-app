@@ -263,6 +263,7 @@ html,body{height:100%;overflow:hidden;font-family:'Nunito',sans-serif;background
       <button class="stab on" onclick="goTab('ops')">⚙️ Ops</button>
       <button class="stab" onclick="goTab('research')">🔬 Forschung</button>
       <button class="stab" onclick="goTab('dinos')">🦖 Dinos</button>
+      <button class="stab" onclick="goTab('mp')">👥 Multi</button>
     </div>
     <div class="sc" id="sc"></div>
   </div>
@@ -271,7 +272,22 @@ html,body{height:100%;overflow:hidden;font-family:'Nunito',sans-serif;background
   <button class="btab on" onclick="mobTab('ops')"><div class="bti">⚙️</div>Ops</button>
   <button class="btab" onclick="mobTab('research')"><div class="bti">🔬</div>Forschung</button>
   <button class="btab" onclick="mobTab('dinos')"><div class="bti">🦖</div>Dinos</button>
+  <button class="btab" onclick="mobTab('mp')"><div class="bti">👥</div>Multi</button>
 </div></div>
+
+<!-- Event popup -->
+<div id="event-popup" style="display:none;position:fixed;top:60px;left:50%;transform:translateX(-50%);
+  background:linear-gradient(135deg,rgba(9,18,38,.98),rgba(14,28,60,.98));
+  border:1.5px solid rgba(243,156,18,.6);border-radius:16px;padding:14px 18px;
+  z-index:500;max-width:300px;width:90%;box-shadow:0 6px 28px rgba(243,156,18,.25);
+  flex-direction:column;align-items:center;text-align:center">
+  <div id="ep-icon" style="font-size:2.4rem;margin-bottom:4px"></div>
+  <div id="ep-title" style="font-weight:800;font-size:.95rem;color:#f39c12;margin-bottom:4px"></div>
+  <div id="ep-body" style="font-size:.78rem;color:rgba(255,255,255,.8);line-height:1.5"></div>
+  <button onclick="document.getElementById('event-popup').style.display='none'"
+    style="margin-top:10px;padding:4px 16px;background:rgba(243,156,18,.2);border:1px solid rgba(243,156,18,.4);
+    border-radius:10px;color:#f39c12;font-weight:800;font-size:.72rem;cursor:pointer;font-family:'Nunito',sans-serif">OK</button>
+</div>
 
 <!-- Dino picker modal -->
 <div class="mbg" id="dino-picker">
@@ -655,30 +671,88 @@ function initAgent(enc,dinoId){
     vx:randRange(-1,1)*d.spd,vy:randRange(-1,1)*d.spd,
     dir:1,bobT:Math.random()*6.28,tailT:Math.random()*6.28,legT:Math.random()*6.28,
     state:'walk',stateT:0,happiness:5,fedAt:Date.now(),
+    isAlpha:false,flockTarget:null,chaseTarget:null,fleeFrom:null,
+    socialT:0,roarT:0,
   };
 }
 function updateAgent(ag,enc){
   const d=DINOS.find(x=>x.id===ag.dinoId);if(!d)return;
-  ag.bobT+=0.07;ag.tailT+=0.1;ag.legT+=0.14;ag.stateT--;
+  ag.bobT+=0.07;ag.tailT+=0.1;ag.legT+=0.14;ag.stateT--;ag.socialT--;ag.roarT--;
   const decayRate=G.research.find(r=>r.id==='research_happiness')?.done?0.004:0.008;
   ag.happiness=Math.max(1,ag.happiness-(decayRate*(G.speed)));
+
+  // --- SOCIAL BEHAVIOUR ---
+  const peers=enc.dinos.filter(a=>a!==ag&&a.dinoId===ag.dinoId);
+  const predators=enc.dinos.filter(a=>a!==ag&&DINOS.find(x=>x.id===a.dinoId)?.type==='carnivore');
+  const prey=enc.dinos.filter(a=>a!==ag&&DINOS.find(x=>x.id===a.dinoId)?.type==='herbivore');
+
+  // Herding: herbivores flock together
+  if(d.type==='herbivore'&&peers.length>0&&ag.socialT<=0){
+    ag.socialT=30+Math.random()*60;
+    const nearest=peers.reduce((best,p)=>{
+      const dist=Math.hypot(p.x-ag.x,p.y-ag.y);
+      return dist<Math.hypot(best.x-ag.x,best.y-ag.y)?p:best;
+    },peers[0]);
+    const dist=Math.hypot(nearest.x-ag.x,nearest.y-ag.y);
+    if(dist>80&&dist<400){ag.flockTarget=nearest;} // move toward herd
+    else if(dist<35){ag.flockTarget=null;} // spread out a bit
+  }
+
+  // Assign alpha in carnivore groups
+  if(d.type==='carnivore'&&peers.length>0&&!enc.dinos.find(a=>a.isAlpha&&a.dinoId===ag.dinoId)){
+    ag.isAlpha=true;
+  }
+
+  // Carnivore hunt behaviour (rare, dramatic)
+  if(d.type==='carnivore'&&prey.length>0&&ag.socialT<=0&&Math.random()<0.015){
+    ag.socialT=120;
+    ag.chaseTarget=prey[Math.floor(Math.random()*prey.length)];
+    ag.state='chase';ag.stateT=80+Math.random()*60;
+    ag.roarT=15; // roar animation
+    // make prey flee
+    if(ag.chaseTarget){ag.chaseTarget.fleeFrom=ag;ag.chaseTarget.state='flee';ag.chaseTarget.stateT=80+Math.random()*60;}
+  }
+
+  // State machine
   if(ag.stateT<=0){
+    ag.chaseTarget=null;ag.fleeFrom=null;
     const rv=Math.random();
-    if(rv<0.08){ag.state='idle';ag.stateT=40+Math.random()*80;}
-    else if(rv<0.12){ag.state='eat';ag.stateT=30+Math.random()*60;}
+    if(rv<0.07){ag.state='idle';ag.stateT=40+Math.random()*80;}
+    else if(rv<0.11){ag.state='eat';ag.stateT=25+Math.random()*50;ag.happiness=Math.min(5,ag.happiness+0.3);}
+    else if(rv<0.13&&ag.isAlpha){ag.state='roar';ag.stateT=20;ag.roarT=20;}
     else{ag.state='walk';ag.stateT=60+Math.random()*120;
       ag.vx=randRange(-1,1)*d.spd*1.4;ag.vy=randRange(-1,1)*d.spd*1.4;}
   }
-  if(ag.state==='walk'){
-    ag.x+=ag.vx;ag.y+=ag.vy;
-    if(ag.vx>0.05)ag.dir=1;else if(ag.vx<-0.05)ag.dir=-1;
-    if(!ptInPoly(ag.x,ag.y,enc.points)){
-      const b=enc.bounds;
-      const dx=b.cx-ag.x,dy=b.cy-ag.y,dist=Math.sqrt(dx*dx+dy*dy)||1;
-      ag.vx=dx/dist*d.spd+randRange(-0.2,0.2);
-      ag.vy=dy/dist*d.spd+randRange(-0.2,0.2);
-      ag.x+=ag.vx*3;ag.y+=ag.vy*3;
+
+  if(ag.state==='roar'||ag.state==='idle'||ag.state==='eat')return;
+
+  // Movement
+  if(ag.state==='chase'&&ag.chaseTarget){
+    const dx=ag.chaseTarget.x-ag.x,dy=ag.chaseTarget.y-ag.y,dist=Math.sqrt(dx*dx+dy*dy)||1;
+    ag.vx=dx/dist*d.spd*1.8;ag.vy=dy/dist*d.spd*1.8;
+    if(dist<20){// caught — just bump and separate
+      ag.chaseTarget.happiness=Math.max(1,ag.chaseTarget.happiness-0.5);
+      ag.chaseTarget.state='idle';ag.chaseTarget.stateT=40;
+      ag.state='idle';ag.stateT=30;ag.chaseTarget=null;
     }
+  } else if(ag.state==='flee'&&ag.fleeFrom){
+    const dx=ag.x-ag.fleeFrom.x,dy=ag.y-ag.fleeFrom.y,dist=Math.sqrt(dx*dx+dy*dy)||1;
+    ag.vx=dx/dist*d.spd*2;ag.vy=dy/dist*d.spd*2;
+  } else if(ag.flockTarget){
+    const dx=ag.flockTarget.x-ag.x,dy=ag.flockTarget.y-ag.y,dist=Math.sqrt(dx*dx+dy*dy)||1;
+    ag.vx=ag.vx*0.85+dx/dist*d.spd*0.5;ag.vy=ag.vy*0.85+dy/dist*d.spd*0.5;
+  }
+
+  ag.x+=ag.vx;ag.y+=ag.vy;
+  if(ag.vx>0.05)ag.dir=1;else if(ag.vx<-0.05)ag.dir=-1;
+
+  // Bounce back inside enclosure
+  if(!ptInPoly(ag.x,ag.y,enc.points)){
+    const b=enc.bounds;
+    const dx=b.cx-ag.x,dy=b.cy-ag.y,dist=Math.sqrt(dx*dx+dy*dy)||1;
+    ag.vx=dx/dist*d.spd+randRange(-0.2,0.2);
+    ag.vy=dy/dist*d.spd+randRange(-0.2,0.2);
+    ag.x+=ag.vx*3;ag.y+=ag.vy*3;
   }
 }
 
@@ -699,11 +773,38 @@ function drawAgent(ag){
   ctx.save();ctx.translate(sx,sy);ctx.scale(ag.dir*DS,DS);
   drawDinoShape(d,ag);
   ctx.restore();
-  if(ag.state==='idle'||ag.state==='eat'){
-    ctx.save();ctx.font='9px serif';ctx.textAlign='center';
-    ctx.fillText(ag.state==='eat'?'🍃':'💤',sx+5*ag.dir,sy-13);ctx.restore();
+
+  // State icon
+  const icon=ag.state==='eat'?'🍃':ag.state==='idle'?'💤':ag.state==='roar'?'📢':
+    ag.state==='chase'?'💨':ag.state==='flee'?'😱':null;
+  if(icon){
+    ctx.save();ctx.font='10px serif';ctx.textAlign='center';
+    ctx.fillText(icon,sx+5*ag.dir,sy-13);ctx.restore();
   }
-  // happiness bar (tiny, only if low)
+
+  // Alpha crown
+  if(ag.isAlpha){
+    ctx.save();ctx.font='9px serif';ctx.textAlign='center';
+    ctx.fillText('👑',sx,sy-20);ctx.restore();
+  }
+
+  // Roar shockwave
+  if(ag.roarT>0){
+    ctx.save();
+    const r=(15-ag.roarT)*4;
+    ctx.beginPath();ctx.arc(sx,sy,r,0,Math.PI*2);
+    ctx.strokeStyle=`rgba(255,200,50,${ag.roarT/15*0.6})`;ctx.lineWidth=2;ctx.stroke();
+    ctx.restore();
+  }
+
+  // Chase target line (subtle)
+  if(ag.state==='chase'&&ag.chaseTarget){
+    const{x:tx,y:ty}=w2s(ag.chaseTarget.x,ag.chaseTarget.y);
+    ctx.save();ctx.strokeStyle='rgba(231,76,60,0.3)';ctx.lineWidth=1;ctx.setLineDash([4,4]);
+    ctx.beginPath();ctx.moveTo(sx,sy);ctx.lineTo(tx,ty);ctx.stroke();ctx.setLineDash([]);ctx.restore();
+  }
+
+  // Happiness bar (only if low)
   if(ag.happiness<3){
     ctx.save();
     const bw=22,bh=3,bx=sx-bw/2,by=sy-16;
@@ -1149,7 +1250,7 @@ function loop(ts){
 }
 function tick(){
   G.tick++;
-  if(G.tick%20===0){G.day++;dayIncome();}
+  if(G.tick%20===0){G.day++;dayIncome();maybeFireEvent();applyDailyEventEffects();}
   if(G.tick%5===0)spawnVisitor();
   // Research progress
   if(G.activeResearch){
@@ -1393,6 +1494,7 @@ function finishEnc(){
   G.drawing=false;G.drawPts=[];
   notify(`Gehege gebaut! (-${cost}) Tippe rein um Dinos einzusetzen.`);
   updateHUD();renderTab();
+  mpBroadcast({type:'build_enc',enc});
   setTimeout(()=>openDinoPicker(enc),350);
 }
 function cancelEnc(){G.drawing=false;G.drawPts=[];}
@@ -1411,10 +1513,12 @@ function placeBuilding(wx,wy,type){
   const dist=Math.hypot(wx-cx,wy-cy);
   if(dist>ISLAND_R*0.9){notify('Ausserhalb der Insel!');return;}
   G.money-=bd.cost;
-  G.buildings.push({id:Date.now(),type,x:wx,y:wy});
+  const newBld={id:Date.now(),type,x:wx,y:wy};
+  G.buildings.push(newBld);
   notify(`${bd.em} ${bd.n} gebaut!`);
   G.placeItem=null;setTool('pan');
   updateHUD();renderTab();
+  mpBroadcast({type:'build_bld',bld:newBld});
 }
 function openBuildingDetail(b){
   const bd=BUILDINGS.find(x=>x.id===b.type);
@@ -1447,9 +1551,11 @@ function addDino(dinoId){
   const d=DINOS.find(x=>x.id===dinoId);
   if(G.money<d.cost){notify('Nicht genug Geld!');return;}
   G.money-=d.cost;
-  pickerEnc.dinos.push(initAgent(pickerEnc,dinoId));
+  const newAgent=initAgent(pickerEnc,dinoId);
+  pickerEnc.dinos.push(newAgent);
   notify(`${d.em} ${d.n} eingezogen! ${pickerEnc.dinos.length}x im Gehege.`);
   updateHUD();renderTab();
+  mpBroadcast({type:'add_dino',encId:pickerEnc.id,agent:{...newAgent,flockTarget:null,chaseTarget:null,fleeFrom:null}});
   openDinoPicker(pickerEnc);
 }
 
@@ -1495,6 +1601,7 @@ function feedAg_inner(encId,dinoId){
   ag.happiness=Math.min(5,ag.happiness+2);ag.fedAt=Date.now();
   const d=DINOS.find(x=>x.id===dinoId);notify(`${d.em} satt und glücklich! ❤️`);
   document.getElementById('dm').classList.remove('open');renderTab();
+  mpBroadcast({type:'feed',encId,agId:ag.id});
 }
 function releaseAg(encId,dinoId){
   const enc=G.enclosures.find(e=>e.id===encId);if(!enc)return;
@@ -1522,14 +1629,14 @@ function setSpd(s){G.speed=s;[1,2,3].forEach(i=>document.getElementById('s'+i).c
 let curTab='ops';
 function goTab(t){
   curTab=t;
-  document.querySelectorAll('.stab').forEach((b,i)=>b.classList.toggle('on',['ops','research','dinos'][i]===t));
+  document.querySelectorAll('.stab').forEach((b,i)=>b.classList.toggle('on',['ops','research','dinos','mp'][i]===t));
   renderTab();
 }
 function mobTab(t){
   const sb=document.getElementById('sb');
   if(sb.classList.contains('mopen')&&curTab===t){sb.classList.remove('mopen');return;}
   sb.classList.add('mopen');
-  document.querySelectorAll('.btab').forEach((b,i)=>b.classList.toggle('on',['ops','research','dinos'][i]===t));
+  document.querySelectorAll('.btab').forEach((b,i)=>b.classList.toggle('on',['ops','research','dinos','mp'][i]===t));
   goTab(t);
 }
 cvs.addEventListener('touchstart',()=>document.getElementById('sb').classList.remove('mopen'),{passive:true});
@@ -1537,7 +1644,12 @@ cvs.addEventListener('touchstart',()=>document.getElementById('sb').classList.re
 function renderTab(){
   if(curTab==='ops')renderOps();
   else if(curTab==='research')renderResearch();
-  else renderDinosTab();
+  else if(curTab==='dinos')renderDinosTab();
+  else if(curTab==='mp'){
+    const sc=document.getElementById('sc');
+    sc.innerHTML='<div id="mp-panel"></div>';
+    renderMpPanel();
+  }
 }
 
 function renderOps(){
@@ -1566,6 +1678,14 @@ function renderOps(){
         <div style="font-size:.56rem;color:var(--amber)">💰 ${b.cost}</div>
       </div>`).join('')}</div>
     <div class="tip">${getTips()}</div>
+    ${G_EVENTS.log.length?`
+    <div class="bl" style="margin-top:8px">📰 Letzte Ereignisse</div>
+    ${G_EVENTS.log.slice(0,3).map(ev=>`
+      <div style="display:flex;gap:6px;align-items:flex-start;padding:5px 0;border-bottom:1px solid rgba(77,142,255,.07)">
+        <span style="font-size:.95rem">${ev.icon}</span>
+        <div><div style="font-size:.66rem;font-weight:800;color:white">${ev.title}</div>
+        <div style="font-size:.6rem;color:var(--text2)">Tag ${ev.day}</div></div>
+      </div>`).join('')}`:''}
   `;
 }
 
@@ -1736,7 +1856,244 @@ function initPlacePicker(){
     </div>`).join('');
 }
 
-// ==================== ALERT ====================
+// ==================== EVENTS & NEWS ====================
+const EVENT_POOL=[
+  {id:'storm',title:'⛈️ Gewitter!',body:'Besucher suchen Schutz. Einnahmen -30% für 2 Tage.',effect:e=>e.stormDays=2,icon:'⛈️'},
+  {id:'heatwave',title:'☀️ Hitzewelle',body:'Dinos werden schneller durstig. Füttern häufiger!',effect:e=>e.heatwave=true,icon:'☀️'},
+  {id:'journalist',title:'📰 Journalist zu Besuch',body:'Ein Reporter besucht den Park. Zufriedenheit +10 für diesen Tag!',effect:e=>e.sat=Math.min(100,e.sat+10),icon:'📰'},
+  {id:'viral',title:'📱 Park geht viral!',body:'Social Media Hype! +500 Münzen Sondereinnahmen.',effect:e=>e.money+=500,icon:'📱'},
+  {id:'dino_sick',title:'🤒 Dino krank!',body:'Ein Dino in deinem Park ist krank. Glück sinkt schneller!',effect:e=>e.sickEvent=true,icon:'🤒'},
+  {id:'vip',title:'🎩 VIP-Besuch!',body:'Ein berühmter Dino-Forscher besucht den Park. +300 Münzen!',effect:e=>e.money+=300,icon:'🎩'},
+  {id:'breakout',title:'⚠️ Gehege-Alarm!',body:'Ein Dino hat versucht auszubrechen! Ranger-Station verhindert es.',effect:e=>{if(!e.buildings.find(b=>b.type==='ranger'))e.money-=200;},icon:'⚠️'},
+  {id:'fossil',title:'🦴 Fossil gefunden!',body:'Arbeiter fanden ein Fossil auf der Insel. +200 Münzen & Forschungsbonus.',effect:e=>{e.money+=200;if(e.activeResearch)e.researchTimer=Math.max(1,e.researchTimer-5);},icon:'🦴'},
+  {id:'baby',title:'🥚 Dino-Ei entdeckt!',body:'Ein Ei wurde im Gehege gefunden! Ein neuer Dino erscheint bald.',effect:e=>e.pendingBaby=true,icon:'🥚'},
+  {id:'blackout',title:'🔌 Stromausfall!',body:'Kurzausfall auf der Insel. Besucher unzufrieden für 1 Tag.',effect:e=>{e.sat=Math.max(0,e.sat-15);e.money-=100;},icon:'🔌'},
+];
+
+const G_EVENTS={
+  log:[],         // {day, icon, title, body}
+  stormDays:0,
+  heatwave:false,
+  sickEvent:false,
+  pendingBaby:false,
+};
+
+function maybeFireEvent(){
+  if(Math.random()>0.12)return; // ~12% chance per day
+  const pool=EVENT_POOL.filter(e=>{
+    if(e.id==='breakout'&&!G.enclosures.find(enc=>enc.dinos&&enc.dinos.length))return false;
+    if(e.id==='baby'&&!G.enclosures.find(enc=>enc.dinos&&enc.dinos.length>1))return false;
+    return true;
+  });
+  const ev=pool[Math.floor(Math.random()*pool.length)];
+  ev.effect(G);
+  ev.effect(G_EVENTS);
+  G_EVENTS.log.unshift({day:G.day,icon:ev.icon,title:ev.title,body:ev.body});
+  if(G_EVENTS.log.length>12)G_EVENTS.log.pop();
+  showEventPopup(ev);
+  if(curTab==='ops')renderOps();
+  // Sync to partner
+  mpBroadcast({type:'event',ev:{day:G.day,icon:ev.icon,title:ev.title,body:ev.body}});
+}
+
+let eventPopupTimer;
+function showEventPopup(ev){
+  const el=document.getElementById('event-popup');
+  document.getElementById('ep-icon').textContent=ev.icon;
+  document.getElementById('ep-title').textContent=ev.title;
+  document.getElementById('ep-body').textContent=ev.body;
+  el.style.display='flex';
+  clearTimeout(eventPopupTimer);
+  eventPopupTimer=setTimeout(()=>el.style.display='none',5000);
+}
+
+// Apply ongoing event effects each day
+function applyDailyEventEffects(){
+  if(G_EVENTS.stormDays>0){G_EVENTS.stormDays--;G.money=Math.max(0,G.money-50);}
+  if(G_EVENTS.heatwave){
+    G.enclosures.forEach(e=>(e.dinos||[]).forEach(ag=>ag.happiness=Math.max(1,ag.happiness-0.3)));
+    if(Math.random()<0.3)G_EVENTS.heatwave=false;
+  }
+  if(G_EVENTS.sickEvent){
+    const allAg=G.enclosures.flatMap(e=>e.dinos||[]);
+    if(allAg.length){const sick=allAg[Math.floor(Math.random()*allAg.length)];sick.happiness=Math.max(1,sick.happiness-0.5);}
+    if(Math.random()<0.25)G_EVENTS.sickEvent=false;
+  }
+  if(G_EVENTS.pendingBaby){
+    G_EVENTS.pendingBaby=false;
+    const enc=G.enclosures.find(e=>e.dinos&&e.dinos.length>0);
+    if(enc){
+      const parentId=enc.dinos[0].dinoId;
+      enc.dinos.push(initAgent(enc,parentId));
+      notify('🥚 Ein Baby-Dino ist geschlüpft! Willkommen in der Herde!');
+      mpBroadcast({type:'state',state:exportState()});
+    }
+  }
+}
+
+// ==================== MULTIPLAYER ====================
+let mpChannel=null;
+let mpRole='host'; // 'host' | 'guest'
+let mpConnected=false;
+let mpPartnerName='';
+const MP_ROOM_KEY='dinoparadies_room';
+
+function mpInit(roomCode,role,myName){
+  mpRole=role;
+  mpChannel=new BroadcastChannel('dp_'+roomCode);
+  mpChannel.onmessage=mpOnMessage;
+  G.mpMyName=myName;
+  mpConnected=false;
+  if(role==='host'){
+    // Wait for guest to join
+    notify('🔗 Raum erstellt! Warte auf Partner…');
+  } else {
+    mpChannel.postMessage({type:'join',name:myName});
+    notify('🔗 Verbinden…');
+  }
+}
+
+function mpBroadcast(msg){
+  if(mpChannel&&mpConnected)mpChannel.postMessage({...msg,from:G.mpMyName});
+}
+
+function mpOnMessage(e){
+  const msg=e.data;
+  if(msg.type==='join'){
+    mpPartnerName=msg.name;mpConnected=true;
+    notify(`👥 ${msg.name} ist beigetreten!`);
+    mpChannel.postMessage({type:'welcome',name:G.mpMyName,state:exportState()});
+    renderMpPanel();
+  }
+  if(msg.type==='welcome'){
+    mpPartnerName=msg.name;mpConnected=true;
+    importState(msg.state);
+    notify(`👥 Verbunden mit ${msg.name}!`);
+    renderMpPanel();
+  }
+  if(msg.type==='state'){importState(msg.state);}
+  if(msg.type==='chat'){addMpChat(msg.from,msg.text,'them');}
+  if(msg.type==='feed'){
+    const enc=G.enclosures.find(x=>x.id===msg.encId);
+    if(enc){const ag=enc.dinos.find(a=>a.id===msg.agId);if(ag){ag.happiness=Math.min(5,ag.happiness+2);notify(`${msg.from} hat einen Dino gefüttert! ❤️`);}}
+  }
+  if(msg.type==='build_enc'){
+    G.enclosures.push(msg.enc);renderTab();
+  }
+  if(msg.type==='build_bld'){
+    G.buildings.push(msg.bld);renderTab();
+  }
+  if(msg.type==='add_dino'){
+    const enc=G.enclosures.find(x=>x.id===msg.encId);
+    if(enc){enc.dinos.push(msg.agent);notify(`${msg.from} hat einen Dino eingesetzt! 🦕`);}
+  }
+  if(msg.type==='event'){
+    G_EVENTS.log.unshift(msg.ev);
+    if(G_EVENTS.log.length>12)G_EVENTS.log.pop();
+    showEventPopup({icon:msg.ev.icon,title:msg.ev.title,body:msg.ev.body});
+  }
+}
+
+function exportState(){
+  return{
+    money:G.money,day:G.day,sat:G.sat,
+    enclosures:G.enclosures.map(e=>({...e,dinos:e.dinos.map(ag=>({...ag,flockTarget:null,chaseTarget:null,fleeFrom:null}))})),
+    buildings:G.buildings,roads:G.roads,
+    research:G.research,
+  };
+}
+function importState(s){
+  G.money=s.money;G.day=s.day;
+  G.enclosures=s.enclosures.map(e=>({...e,dinos:e.dinos.map(ag=>({...ag,socialT:0,roarT:0,flockTarget:null,chaseTarget:null,fleeFrom:null}))}));
+  G.buildings=s.buildings;G.roads=s.roads||[];
+  if(s.research)G.research=s.research;
+  updateHUD();renderTab();
+}
+
+function addMpChat(sender,text,side){
+  const log=document.getElementById('mp-chat-log');
+  if(!log)return;
+  const d=document.createElement('div');
+  d.style.cssText=`padding:4px 8px;border-radius:9px;font-size:.72rem;max-width:85%;margin-bottom:3px;font-weight:700;align-self:${side==='me'?'flex-end':'flex-start'};background:${side==='me'?'rgba(45,107,228,.4)':'rgba(255,255,255,.1)'};color:white`;
+  d.textContent=side==='me'?text:`${sender}: ${text}`;
+  log.appendChild(d);log.scrollTop=log.scrollHeight;
+}
+
+function sendMpChat(){
+  const inp=document.getElementById('mp-chat-input');
+  if(!inp||!inp.value.trim())return;
+  addMpChat(G.mpMyName||'Ich',inp.value,'me');
+  mpBroadcast({type:'chat',text:inp.value});
+  inp.value='';
+}
+
+function renderMpPanel(){
+  const el=document.getElementById('mp-panel');if(!el)return;
+  el.innerHTML=`
+    <div style="font-size:.7rem;font-weight:800;color:${mpConnected?'#2ecc71':'var(--accent)'};margin-bottom:8px">
+      ${mpConnected?`👥 Verbunden mit <b>${mpPartnerName}</b>`:'Noch kein Partner'}
+    </div>
+    ${!mpConnected?`
+      <div style="font-size:.65rem;color:var(--text2);margin-bottom:6px">Teile einen Raum-Code um zusammen zu spielen:</div>
+      <input id="mp-name" placeholder="Dein Name" maxlength="16"
+        style="width:100%;padding:5px 8px;background:rgba(255,255,255,.08);border:1px solid rgba(77,142,255,.25);border-radius:8px;color:white;font-family:'Nunito',sans-serif;font-size:.72rem;margin-bottom:5px">
+      <div style="display:flex;gap:5px;margin-bottom:5px">
+        <input id="mp-code" placeholder="Code (4 Buchst.)" maxlength="4"
+          style="flex:1;padding:5px 8px;background:rgba(255,255,255,.08);border:1px solid rgba(77,142,255,.25);border-radius:8px;color:white;font-family:'Nunito',sans-serif;font-size:.72rem;text-transform:uppercase">
+        <button onclick="mpJoin()" style="padding:5px 10px;background:var(--blue);border:none;border-radius:8px;color:white;font-weight:800;font-size:.7rem;cursor:pointer;font-family:'Nunito',sans-serif">Join</button>
+      </div>
+      <button onclick="mpCreate()" style="width:100%;padding:6px;background:rgba(0,212,255,.15);border:1.5px solid var(--accent);border-radius:10px;color:var(--accent);font-weight:800;font-size:.72rem;cursor:pointer;font-family:'Nunito',sans-serif">+ Neuen Raum erstellen</button>
+      <div id="mp-created-code" style="display:none;text-align:center;font-family:'Fredoka One',cursive;font-size:1.8rem;color:var(--accent);letter-spacing:6px;margin:8px 0;background:rgba(0,212,255,.08);border-radius:10px;padding:8px"></div>
+    `:`
+      <div style="font-size:.65rem;color:var(--text2);margin-bottom:5px">💬 Team-Chat</div>
+      <div id="mp-chat-log" style="height:120px;overflow-y:auto;background:rgba(0,0,0,.2);border-radius:9px;padding:6px;display:flex;flex-direction:column;gap:3px;margin-bottom:5px;scrollbar-width:thin"></div>
+      <div style="display:flex;gap:4px">
+        <input id="mp-chat-input" placeholder="Nachricht…" maxlength="80"
+          style="flex:1;padding:5px 8px;background:rgba(255,255,255,.07);border:1px solid rgba(77,142,255,.2);border-radius:8px;color:white;font-family:'Nunito',sans-serif;font-size:.7rem"
+          onkeydown="if(event.key==='Enter')sendMpChat()">
+        <button onclick="sendMpChat()" style="padding:5px 9px;background:var(--blue);border:none;border-radius:8px;color:white;font-size:.85rem;cursor:pointer">➤</button>
+      </div>
+      <div style="display:flex;gap:5px;margin-top:6px;flex-wrap:wrap">
+        ${['🦕','🦖','👍','❤️','🎉','🍖','😮','💰'].map(s=>`<button onclick="mpSticker('${s}')" style="background:rgba(255,255,255,.07);border:none;border-radius:7px;width:30px;height:30px;font-size:1rem;cursor:pointer">${s}</button>`).join('')}
+      </div>
+    `}
+    <div style="margin-top:10px">
+      <div class="bl">📰 Ereignislog</div>
+      <div style="max-height:140px;overflow-y:auto;scrollbar-width:thin">
+        ${G_EVENTS.log.length?G_EVENTS.log.map(ev=>`
+          <div style="display:flex;gap:6px;align-items:flex-start;padding:5px 0;border-bottom:1px solid rgba(77,142,255,.08)">
+            <span style="font-size:1rem;flex-shrink:0">${ev.icon}</span>
+            <div>
+              <div style="font-size:.68rem;font-weight:800;color:white">${ev.title} <span style="color:var(--text2);font-weight:400">Tag ${ev.day}</span></div>
+              <div style="font-size:.62rem;color:var(--text2)">${ev.body}</div>
+            </div>
+          </div>`).join('')
+        :'<div style="font-size:.68rem;color:rgba(255,255,255,.3);text-align:center;padding:8px">Noch keine Ereignisse</div>'}
+      </div>
+    </div>
+  `;
+}
+
+let mpCreatedCode='';
+function mpCreate(){
+  const name=(document.getElementById('mp-name')?.value.trim())||'Direktor';
+  G.mpMyName=name;
+  const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  mpCreatedCode=Array.from({length:4},()=>chars[Math.floor(Math.random()*chars.length)]).join('');
+  mpInit(mpCreatedCode,'host',name);
+  const codeEl=document.getElementById('mp-created-code');
+  if(codeEl){codeEl.style.display='block';codeEl.textContent=mpCreatedCode;}
+  notify(`Code: ${mpCreatedCode} — teile ihn mit deinem Bruder!`);
+}
+function mpJoin(){
+  const name=(document.getElementById('mp-name')?.value.trim())||'Wächter';
+  const code=(document.getElementById('mp-code')?.value.trim().toUpperCase())||'';
+  if(code.length!==4){notify('4-stelligen Code eingeben!');return;}
+  G.mpMyName=name;
+  mpInit(code,'guest',name);
+}
+function mpSticker(s){addMpChat(G.mpMyName||'Ich',s,'me');mpBroadcast({type:'chat',text:s});}
+
 let alertTimer;
 function showAlert(title,body){
   document.getElementById('at').textContent=title;
