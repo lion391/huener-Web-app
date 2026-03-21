@@ -731,6 +731,9 @@ const G={
   eggs:[],
   lastPickerEnc:null,
   sat:50,rating:0,
+  timeOfDay:0,
+  weather:'sunny',
+  weatherTimer:0,
   quizMode:'kid',
   research:[...RESEARCH.map(r=>({...r}))],
   activeResearch:null,
@@ -860,7 +863,7 @@ function updateAgent(ag,enc){
     const rv=Math.random();
     if(rv<.07){ag.state='idle';ag.stateT=40+Math.random()*80;}
     else if(rv<.11){ag.state='eat';ag.stateT=25+Math.random()*50;ag.happiness=Math.min(5,ag.happiness+.3);}
-    else if(rv<.13&&ag.isAlpha){ag.state='roar';ag.stateT=22;ag.roarT=22;}
+    else if(rv<.13&&ag.isAlpha){ag.state='roar';ag.stateT=22;ag.roarT=22;sndRoar();}
     else{ag.state='walk';ag.stateT=60+Math.random()*120;ag.vx=randRange(-1,1)*d.spd*1.4;ag.vy=randRange(-1,1)*d.spd*1.4;}
   }
   if(['roar','idle','eat'].includes(ag.state))return;
@@ -903,9 +906,9 @@ function drawAgent(ag){
   if(sx<-80||sy<-80||sx>W+80||sy>H+80)return;
   const DS=.36;
   ctx.save();ctx.translate(sx,sy);ctx.scale(ag.dir*DS,DS);drawDinoShape(d,ag);ctx.restore();
-  const ico=ag.state==='eat'?'\u{1F343}':ag.state==='idle'?'\u{1F4A4}':ag.state==='roar'?'\u{1F4E2}':ag.state==='chase'?'\u{1F4A8}':ag.state==='flee'?'\u{1F631}':null;
+  const ico=ag.state==='eat'?'🍃':ag.state==='idle'?'💤':ag.state==='roar'?'📢':ag.state==='chase'?'💨':ag.state==='flee'?'😱':null;
   if(ico){ctx.save();ctx.font='9px serif';ctx.textAlign='center';ctx.fillText(ico,sx+5*ag.dir,sy-13);ctx.restore();}
-  if(ag.isAlpha){ctx.save();ctx.font='9px serif';ctx.textAlign='center';ctx.fillText('\u{1F451}',sx,sy-20);ctx.restore();}
+  if(ag.isAlpha){ctx.save();ctx.font='9px serif';ctx.textAlign='center';ctx.fillText('👑',sx,sy-20);ctx.restore();}
   if(ag.roarT>0){ctx.save();ctx.beginPath();ctx.arc(sx,sy,(18-ag.roarT)*4,0,Math.PI*2);ctx.strokeStyle='rgba(255,200,50,'+(ag.roarT/18*.55)+')';ctx.lineWidth=2;ctx.stroke();ctx.restore();}
   if(ag.happiness<3){
     ctx.save();const bw=20,bx=sx-bw/2,by=sy-16;
@@ -1342,6 +1345,7 @@ cvs.addEventListener('click',e=>{
 const TICK_MS=[null,2200,800,280];let lastT=0;
 function loop(ts){
   requestAnimationFrame(loop);
+  tickDayNight();
   G.enclosures.forEach(e=>e.dinos&&e.dinos.forEach(ag=>updateAgent(ag,e)));
   updateVisitors();
   if(ts-lastT>TICK_MS[G.speed]){lastT=ts;tick();}
@@ -1349,7 +1353,7 @@ function loop(ts){
 }
 function tick(){
   G.tick++;
-  if(G.tick%20===0){G.day++;dayIncome();tickEggs();maybeFireEvent();if(G.heatwave&&Math.random()<.3)G.heatwave=false;}
+  if(G.tick%20===0){G.day++;dayIncome();tickEggs();if(G.day%5===0)saveGame();maybeFireEvent();if(G.heatwave&&Math.random()<.3)G.heatwave=false;}
   if(G.tick%5===0)spawnVisitor();
   // Research progress
   if(G.activeResearch){
@@ -1591,7 +1595,7 @@ function finishEnc(){
   const enc={id:Date.now(),points:[...G.drawPts],typeIdx:G.encType,bounds,dinos:[]};
   G.enclosures.push(enc);
   G.drawing=false;G.drawPts=[];
-  notify(`Gehege gebaut! (-${cost}) Tippe rein um Dinos einzusetzen.`);
+  notify(`Gehege gebaut! (-${cost}) Tippe rein um Dinos einzusetzen.`);sndBuild();
   updateHUD();renderTab();
   setTimeout(()=>openDinoPicker(enc),350);
 }
@@ -1644,7 +1648,7 @@ function addDino(dinoId){
   if(G.money<d.cost){notify('Nicht genug Geld!');return;}
   G.money-=d.cost;
   pickerEnc.dinos.push(initAgent(pickerEnc,dinoId));
-  notify(`${d.em} ${d.n} eingezogen! ${pickerEnc.dinos.length}x im Gehege.`);
+  notify(`${d.em} ${d.n} eingezogen! ${pickerEnc.dinos.length}x im Gehege.`);sndCoin();
   updateHUD();renderTab();
   openDinoPicker(pickerEnc);
 }
@@ -1756,14 +1760,7 @@ function renderOps(){
     <div class="srow"><span class="sk">⭐ Bewertung</span><span class="sv">${'⭐'.repeat(Math.min(5,G.rating))}</span></div>
     <div class="srow"><span class="sk">📅 Tag</span><span class="sv">${G.day}</span></div>
     <div class="bl" style="margin-top:8px">Gebäude</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">${BUILDINGS.map(b=>`
-      <div style="background:rgba(45,107,228,.09);border:1.5px solid rgba(77,142,255,.14);border-radius:9px;padding:6px;text-align:center;cursor:pointer;transition:all .14s"
-        onclick="setPlaceItem('${b.id}');document.getElementById('place-picker').style.display='none'"
-        onmouseover="this.style.background='rgba(45,107,228,.22)'" onmouseout="this.style.background='rgba(45,107,228,.09)'">
-        <div style="font-size:1.3rem">${b.em}</div>
-        <div style="font-size:.62rem;font-weight:800;color:white">${b.n}</div>
-        <div style="font-size:.56rem;color:var(--amber)">💰 ${b.cost}</div>
-      </div>`).join('')}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">${BUILDINGS.map(b=>'<div style="background:rgba(45,107,228,.09);border:1.5px solid rgba(77,142,255,.14);border-radius:9px;padding:6px;text-align:center;cursor:pointer" onclick="setPlaceItem(\''+b.id+'\');document.getElementById(\'place-picker\').style.display=\'none\'" onmouseover="this.style.background=\'rgba(45,107,228,.22)\'" onmouseout="this.style.background=\'rgba(45,107,228,.09)\'"><div style="font-size:1.3rem">'+b.em+'</div><div style="font-size:.62rem;font-weight:800;color:white">'+b.n+'</div><div style="font-size:.56rem;color:var(--amber)">💰 '+b.cost+'</div></div>').join('')}</div>
     <div class="tip">${getTips()}</div>
   `;
 }
@@ -1785,18 +1782,7 @@ function renderResearch(){
       ${G.activeResearch?'Läuft: <b style="color:var(--accent)">'+G.research.find(r=>r.id===G.activeResearch)?.n+'</b>':'Keine aktive Forschung'}
     </div>
     <div class="bl">Projekte</div>
-    ${G.research.map(r=>`
-      <div class="ritem ${r.done?'done':''} ${(G.activeResearch&&G.activeResearch!==r.id&&!r.done)?'locked':''}"
-        onclick="'+(!r.done&&!G.activeResearch?'startResearch(\''+r.id+'\')':'')+'" >
-        <div class="ri-top">
-          <div class="ri-em">${r.em}</div>
-          <div>
-            <div class="ri-n">${r.n} ${r.done?'✓':''}</div>
-            <div class="ri-c">${r.done?'Abgeschlossen':'💰 '+r.cost+' · '+r.time+' Tage'}</div>
-          </div>
-        </div>
-        <div class="ri-desc">${r.desc}</div>
-      </div>`).join('')}
+    ${G.research.map(r=>'<div class="ritem '+(r.done?'done':'')+' '+((G.activeResearch&&G.activeResearch!==r.id&&!r.done)?'locked':'')+'" onclick="'+(!r.done&&!G.activeResearch?'startResearch(\''+r.id+'\')':'')+'" ><div class="ri-top"><div class="ri-em">'+r.em+'</div><div><div class="ri-n">'+r.n+' '+(r.done?'✓':'')+'</div><div class="ri-c">'+(r.done?'Abgeschlossen':'💰 '+r.cost+' · '+r.time+' Tage')+'</div></div></div><div class="ri-desc">'+r.desc+'</div></div>').join('')}
   `;
 }
 function startResearch(id){
@@ -1940,13 +1926,13 @@ function initPlacePicker(){
 // ==================== EVENTS ====================
 const EVENTS_POOL=[
   {ico:'\u26C8\uFE0F',title:'Gewitter!',body:'Besucher suchen Schutz. -50.',fn:g=>{g.money=Math.max(0,g.money-50);g.sat=Math.max(0,g.sat-8);}},
-  {ico:'\u{1F4F1}',title:'Park geht viral!',body:'Social Media Hype! +600!',fn:g=>{g.money+=600;}},
-  {ico:'\u{1F3A9}',title:'VIP-Besuch!',body:'Berühmter Forscher! +400!',fn:g=>{g.money+=400;}},
-  {ico:'\u{1F9B4}',title:'Fossil gefunden!',body:'Arbeiter fanden Fossil! +250!',fn:g=>{g.money+=250;}},
-  {ico:'\u{1F50C}',title:'Stromausfall!',body:'Kurzer Ausfall. -80.',fn:g=>{g.sat=Math.max(0,g.sat-12);g.money=Math.max(0,g.money-80);}},
+  {ico:'📱',title:'Park geht viral!',body:'Social Media Hype! +600!',fn:g=>{g.money+=600;}},
+  {ico:'🎩',title:'VIP-Besuch!',body:'Berühmter Forscher! +400!',fn:g=>{g.money+=400;}},
+  {ico:'🦴',title:'Fossil gefunden!',body:'Arbeiter fanden Fossil! +250!',fn:g=>{g.money+=250;}},
+  {ico:'🔌',title:'Stromausfall!',body:'Kurzer Ausfall. -80.',fn:g=>{g.sat=Math.max(0,g.sat-12);g.money=Math.max(0,g.money-80);}},
   {ico:'\u2600\uFE0F',title:'Hitzewelle!',body:'Dinos durstig! Füttern!',fn:g=>{g.heatwave=true;}},
-  {ico:'\u{1F4F0}',title:'Journalist da!',body:'Gute Presse! +Zufriedenheit.',fn:g=>{g.sat=Math.min(100,g.sat+12);}},
-  {ico:'\u{1F922}',title:'Dino krank!',body:'Ein Tier braucht Pflege!',fn:g=>{const all=g.enclosures.flatMap(e=>e.dinos||[]);if(all.length)all[0].happiness=Math.max(1,all[0].happiness-1.5);}},
+  {ico:'📰',title:'Journalist da!',body:'Gute Presse! +Zufriedenheit.',fn:g=>{g.sat=Math.min(100,g.sat+12);}},
+  {ico:'🤢',title:'Dino krank!',body:'Ein Tier braucht Pflege!',fn:g=>{const all=g.enclosures.flatMap(e=>e.dinos||[]);if(all.length)all[0].happiness=Math.max(1,all[0].happiness-1.5);}},
 ];
 if(!G.evLog)G.evLog=[];
 if(!G.heatwave)G.heatwave=false;
@@ -1977,7 +1963,7 @@ function addEgg(dinoId,encId){
   const days=d.hatchTime*(fast?0.5:1);
   const maxT=days*20;
   G.eggs.push({id:Date.now()+Math.random(),dinoId,encId,timer:maxT,maxT,days});
-  notify('\u{1F95A} Ei gelegt! Schlüpft in '+days+' Tagen.');
+  notify('🥚 Ei gelegt! Schlüpft in '+days+' Tagen.');
   updateHUD();
 }
 function tickEggs(){
@@ -1990,7 +1976,7 @@ function tickEggs(){
         const ag=initAgent(enc,egg.dinoId);
         if(ag)enc.dinos.push(ag);
         const d=DINOS.find(x=>x.id===egg.dinoId);
-        notify('\u{1F389} '+d.em+' '+d.n+' ist geschlüpft!');
+        notify('🎉 '+d.em+' '+d.n+' ist geschlüpft!');sndHatch();
         showAlert('Dino geschlüpft!',d.n+' ist jetzt im Gehege!');
       }
       egg.timer=-1;
@@ -2015,14 +2001,14 @@ function renderHatch(){
       const ready=dLeft===0;
       html+='<div style="background:rgba(45,107,228,.09);border:1.5px solid '+(ready?'rgba(243,156,18,.6)':'rgba(77,142,255,.15)')+';border-radius:12px;padding:10px;margin-bottom:8px">'
         +'<div style="display:flex;align-items:center;gap:10px">'
-        +'<span style="font-size:2rem">'+(prog>0.6?'\u{1F95A}':'\u{1FAB4}')+'</span>'
+        +'<span style="font-size:2rem">'+(prog>0.6?'🥚':'🪴')+'</span>'
         +'<div style="flex:1">'
         +'<div style="font-weight:800;color:white;font-size:.82rem">'+d.em+' '+d.n+'-Ei</div>'
         +'<div style="font-size:.7rem;color:var(--text2);margin-top:2px">'+(ready?'Bereit zum Schlüpfen!':dLeft+' Tag'+(dLeft===1?'':'e')+' noch')+'</div>'
         +'<div style="height:5px;background:rgba(255,255,255,.1);border-radius:3px;margin-top:4px;overflow:hidden">'
         +'<div style="height:100%;border-radius:3px;width:'+Math.round(prog*100)+'%;background:'+(ready?'#f39c12':'var(--accent)')+'"></div></div>'
         +'</div>'
-        +(ready?'<button onclick="forceHatch('+egg.id+')" style="padding:6px 12px;background:linear-gradient(135deg,#f39c12,#e67e22);border:none;border-radius:9px;color:white;font-weight:800;font-size:.75rem;cursor:pointer;font-family:Nunito,sans-serif;flex-shrink:0">\u{1F423} Schlüpfen!</button>':'')
+        +(ready?'<button onclick="forceHatch('+egg.id+')" style="padding:6px 12px;background:linear-gradient(135deg,#f39c12,#e67e22);border:none;border-radius:9px;color:white;font-weight:800;font-size:.75rem;cursor:pointer;font-family:Nunito,sans-serif;flex-shrink:0">🐣 Schlüpfen!</button>':'')
         +'</div></div>';
     });
   }else{
@@ -2034,7 +2020,7 @@ function renderHatch(){
   DINOS.filter(d=>isUnlocked(d)).forEach(d=>{
     const ok=pEnc&&G.money>=d.cost;
     html+='<div style="background:rgba(45,107,228,.1);border:1.5px solid rgba(77,142,255,.15);border-radius:11px;padding:8px;text-align:center;cursor:'+(ok?'pointer':'not-allowed')+';opacity:'+(ok?1:0.35)+'"'
-      +(ok?' onclick="addEgg(''+d.id+'',G.lastPickerEnc.id);renderHatch()"':'')+'>'      +'<div style="font-size:1.5rem">'+d.em+'</div>'      +'<div style="font-size:.65rem;font-weight:800;color:white">'+d.n+'</div>'      +'<div style="font-size:.58rem;color:var(--amber)">\u{1F4B0} '+d.cost+'</div>'      +'<div style="font-size:.55rem;color:var(--text2)">'+d.hatchTime+' Tage</div>'      +'</div>';
+      +(ok?' onclick="addEgg(\'+d.id+\',G.lastPickerEnc.id);renderHatch()"':'')+'>'      +'<div style="font-size:1.5rem">'+d.em+'</div>'      +'<div style="font-size:.65rem;font-weight:800;color:white">'+d.n+'</div>'      +'<div style="font-size:.58rem;color:var(--amber)">💰 '+d.cost+'</div>'      +'<div style="font-size:.55rem;color:var(--text2)">'+d.hatchTime+' Tage</div>'      +'</div>';
   });
   html+='</div>';
   document.getElementById('sc').innerHTML=html;
@@ -2055,11 +2041,11 @@ function mpOnMsg(e){
   const m=e.data;
   if(m.type==='join'){
     MP.partner=m.name;MP.connected=true;
-    notify('\u{1F465} '+m.name+' ist beigetreten!');
+    notify('👥 '+m.name+' ist beigetreten!');
     mpCh.postMessage({type:'welcome',name:MP.name,from:MP.name,state:mpExport()});
     renderMpTab();
   }
-  if(m.type==='welcome'){MP.partner=m.name;MP.connected=true;mpImport(m.state);notify('\u{1F465} Verbunden mit '+m.name+'!');renderMpTab();}
+  if(m.type==='welcome'){MP.partner=m.name;MP.connected=true;mpImport(m.state);notify('👥 Verbunden mit '+m.name+'!');renderMpTab();}
   if(m.type==='state')mpImport(m.state);
   if(m.type==='chat')mpAddChat(m.from,m.text,'them');
   if(m.type==='feed'){
@@ -2100,22 +2086,22 @@ function renderMpTab(){
   const sc=document.getElementById('sc');if(!sc)return;
   let html='';
   if(MP.connected){
-    html='<div style="background:rgba(46,204,113,.1);border:1px solid rgba(46,204,113,.3);border-radius:10px;padding:8px;margin-bottom:10px;text-align:center;font-weight:800;font-size:.84rem;color:#2ecc71">\u{1F465} Verbunden mit '+MP.partner+'</div>'
-      +'<div class="bl">\u{1F4AC} Chat</div>'
+    html='<div style="background:rgba(46,204,113,.1);border:1px solid rgba(46,204,113,.3);border-radius:10px;padding:8px;margin-bottom:10px;text-align:center;font-weight:800;font-size:.84rem;color:#2ecc71">👥 Verbunden mit '+MP.partner+'</div>'
+      +'<div class="bl">💬 Chat</div>'
       +'<div id="mp-chatlog" style="height:120px;overflow-y:auto;background:rgba(0,0,0,.22);border-radius:10px;padding:7px;display:flex;flex-direction:column;gap:3px;margin-bottom:7px;scrollbar-width:thin"></div>'
       +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:7px">'
-      +['\u{1F995}','\u{1F996}','\u{1F44D}','\u2764\uFE0F','\u{1F389}','\u{1F356}','\u{1F95A}','\u{1F4B0}'].map(s=>'<button onclick="mpSticker(''+s+'')" style="background:rgba(255,255,255,.07);border:none;border-radius:8px;width:36px;height:36px;font-size:1rem;cursor:pointer">'+s+'</button>').join('')
+      +['🦕','🦖','👍','❤️','🎉','🍖','🥚','💰'].map(s=>'<button onclick="mpSticker(\'' +s+ '\'  )" style="background:rgba(255,255,255,.07);border:none;border-radius:8px;width:36px;height:36px;font-size:1rem;cursor:pointer">'+s+'</button>').join('')
       +'</div>'
-      +'<div style="display:flex;gap:6px"><input id="mp-inp" placeholder="Nachricht..." maxlength="80" onkeydown="if(event.key==='Enter')mpSendChat()" style="flex:1;padding:8px 10px;background:rgba(255,255,255,.07);border:1px solid rgba(77,142,255,.22);border-radius:9px;color:white;font-family:Nunito,sans-serif;font-size:.84rem;font-weight:700;outline:none">'
+      +'<div style="display:flex;gap:6px"><input id="mp-inp" placeholder="Nachricht..." maxlength="80" onkeydown="if(event.key==\'Enter\')mpSendChat()" style="flex:1;padding:8px 10px;background:rgba(255,255,255,.07);border:1px solid rgba(77,142,255,.22);border-radius:9px;color:white;font-family:Nunito,sans-serif;font-size:.84rem;font-weight:700;outline:none">'
       +'<button onclick="mpSendChat()" style="padding:0 14px;background:var(--blue);border:none;border-radius:9px;color:white;font-size:1rem;cursor:pointer">\u27A4</button></div>';
   }else{
     html='<div style="font-size:.76rem;color:var(--text2);margin-bottom:10px;line-height:1.5">Spiele zusammen mit deinem Bruder! Erstelle einen Raum und teile den Code.</div>'
       +'<input id="mp-name" placeholder="Dein Name" maxlength="18" style="width:100%;padding:9px 11px;background:rgba(255,255,255,.07);border:1px solid rgba(77,142,255,.22);border-radius:9px;color:white;font-family:Nunito,sans-serif;font-size:.86rem;font-weight:700;outline:none;margin-bottom:7px">'
-      +'<button onclick="mpCreate()" style="width:100%;padding:.68rem;background:var(--blue);border:none;border-radius:11px;color:white;font-family:Nunito,sans-serif;font-weight:800;font-size:.88rem;cursor:pointer;margin-bottom:6px">\u{1F33F} Neuen Raum erstellen</button>'
+      +'<button onclick="mpCreate()" style="width:100%;padding:.68rem;background:var(--blue);border:none;border-radius:11px;color:white;font-family:Nunito,sans-serif;font-weight:800;font-size:.88rem;cursor:pointer;margin-bottom:6px">🌿 Neuen Raum erstellen</button>'
       +'<div id="mp-codedisp" style="display:none;text-align:center;font-family:Fredoka One,cursive;font-size:2.1rem;color:var(--accent);letter-spacing:7px;padding:10px;background:rgba(0,212,255,.08);border-radius:11px;margin-bottom:7px;border:1px solid rgba(0,212,255,.2)"></div>'
       +'<div style="text-align:center;font-size:.7rem;color:rgba(255,255,255,.32);margin:6px 0">— oder beitreten —</div>'
       +'<input id="mp-joincode" placeholder="Raum-Code (4 Buchst.)" maxlength="4" style="width:100%;padding:9px 11px;background:rgba(255,255,255,.07);border:1px solid rgba(77,142,255,.22);border-radius:9px;color:white;font-family:Nunito,sans-serif;font-size:.86rem;font-weight:700;text-transform:uppercase;outline:none;margin-bottom:6px">'
-      +'<button onclick="mpJoin()" style="width:100%;padding:.68rem;background:transparent;border:1.5px solid var(--accent);border-radius:11px;color:var(--accent);font-family:Nunito,sans-serif;font-weight:800;font-size:.88rem;cursor:pointer">\u{1F517} Beitreten</button>';
+      +'<button onclick="mpJoin()" style="width:100%;padding:.68rem;background:transparent;border:1.5px solid var(--accent);border-radius:11px;color:var(--accent);font-family:Nunito,sans-serif;font-weight:800;font-size:.88rem;cursor:pointer">🔗 Beitreten</button>';
   }
   sc.innerHTML=html;
 }
@@ -2151,6 +2137,203 @@ function notify(msg){
   clearTimeout(nt);nt=setTimeout(()=>el.classList.remove('show'),2800);
 }
 
+
+// ==================== SAVE / LOAD ====================
+function saveGame(){
+  try{
+    const state={
+      money:G.money,day:G.day,sat:G.sat,
+      enclosures:G.enclosures.map(e=>({
+        id:e.id,pts:e.pts,typeIdx:e.typeIdx,bounds:e.bounds,
+        dinos:e.dinos.map(a=>({dinoId:a.dinoId,id:a.id,x:a.x,y:a.y,happiness:a.happiness}))
+      })),
+      buildings:G.buildings,
+      roads:G.roads,
+      eggs:G.eggs.map(e=>({...e})),
+      research:G.research.map(r=>({...r})),
+      activeResearch:G.activeResearch,
+      researchTimer:G.researchTimer,
+    };
+    localStorage.setItem('dinoparadies_save',JSON.stringify(state));
+    notify('💾 Gespeichert! Tag '+G.day);
+  }catch(e){notify('Speichern fehlgeschlagen.');}
+}
+function loadGame(){
+  try{
+    const raw=localStorage.getItem('dinoparadies_save');
+    if(!raw){notify('Kein Spielstand gefunden.');return;}
+    const s=JSON.parse(raw);
+    G.money=s.money||5000;
+    G.day=s.day||1;
+    G.sat=s.sat||45;
+    G.enclosures=(s.enclosures||[]).map(e=>({
+      ...e,
+      dinos:(e.dinos||[]).map(ag=>({
+        ...initAgent(e,ag.dinoId)||{},
+        ...ag,
+        isAlpha:false,chaseId:null,fleeId:null,_flock:null,socialT:0,roarT:0,
+        bobT:Math.random()*6.28,tailT:Math.random()*6.28,legT:Math.random()*6.28,
+        state:'walk',stateT:0,
+      }))
+    }));
+    G.buildings=s.buildings||[];
+    G.roads=s.roads||[];
+    G.eggs=s.eggs||[];
+    G.research=s.research||G.research;
+    G.activeResearch=s.activeResearch||null;
+    G.researchTimer=s.researchTimer||0;
+    updateHUD();calcSat();
+    notify('📂 Spielstand geladen! Willkommen zurück, Tag '+G.day+'!');
+  }catch(e){notify('Laden fehlgeschlagen: '+e.message);}
+}
+function hasSave(){try{return!!localStorage.getItem('dinoparadies_save');}catch(e){return false;}}
+
+// ==================== SOUND ====================
+const SND={ctx:null};
+function getSndCtx(){
+  if(!SND.ctx){try{SND.ctx=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}}
+  return SND.ctx;
+}
+function playTone(freq,dur,type,vol){
+  const ctx=getSndCtx();if(!ctx)return;
+  const o=ctx.createOscillator(),g=ctx.createGain();
+  o.connect(g);g.connect(ctx.destination);
+  o.type=type||'sine';o.frequency.setValueAtTime(freq,ctx.currentTime);
+  g.gain.setValueAtTime((vol||0.15),ctx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+dur);
+  o.start(ctx.currentTime);o.stop(ctx.currentTime+dur);
+}
+function sndCoin(){playTone(880,.08,'square',.1);setTimeout(()=>playTone(1100,.12,'square',.08),80);}
+function sndBuild(){playTone(220,.12,'sawtooth',.1);setTimeout(()=>playTone(330,.18,'sawtooth',.08),100);}
+function sndHatch(){
+  [523,659,784,1047].forEach((f,i)=>setTimeout(()=>playTone(f,.15,'sine',.12),i*80));
+}
+function sndNotify(){playTone(660,.08,'sine',.08);setTimeout(()=>playTone(880,.1,'sine',.06),100);}
+function sndError(){playTone(220,.18,'sawtooth',.12);}
+function sndRoar(){
+  playTone(110,.3,'sawtooth',.18);
+  playTone(80,.4,'sawtooth',.12);
+}
+
+// ==================== DAY/NIGHT + WEATHER ====================
+function tickDayNight(){
+  // timeOfDay: 0=dawn, 0.25=day, 0.5=dusk, 0.75=night, 1=dawn
+  G.timeOfDay=(G.timeOfDay+0.0002*G.speed)%1;
+  // Weather changes
+  G.weatherTimer--;
+  if(G.weatherTimer<=0){
+    const weathers=['sunny','sunny','sunny','cloudy','cloudy','rain','storm'];
+    G.weather=G.heatwave?'sunny':weathers[Math.floor(Math.random()*weathers.length)];
+    G.weatherTimer=600+Math.random()*1200;
+  }
+}
+
+function getDayNightOverlay(){
+  const t=G.timeOfDay;
+  // 0=dawn(orange), 0.25=day(clear), 0.5=dusk(red-orange), 0.75=night(dark blue)
+  if(t<0.1){// dawn
+    const p=t/0.1;
+    return`rgba(255,140,0,${0.35*(1-p)})`;
+  }else if(t<0.4){// day - clear
+    return'rgba(0,0,0,0)';
+  }else if(t<0.55){// dusk
+    const p=(t-0.4)/0.15;
+    return`rgba(200,80,20,${0.3*Math.sin(p*Math.PI)})`;
+  }else if(t<0.65){// night onset
+    const p=(t-0.55)/0.1;
+    return`rgba(10,20,60,${0.55*p})`;
+  }else if(t<0.9){// night
+    return'rgba(10,20,60,0.55)';
+  }else{// pre-dawn
+    const p=(t-0.9)/0.1;
+    return`rgba(10,20,60,${0.55*(1-p)})`;
+  }
+}
+
+function drawDayNightWeather(){
+  // Overlay
+  const overlay=getDayNightOverlay();
+  if(overlay!=='rgba(0,0,0,0)'){
+    ctx.save();ctx.fillStyle=overlay;ctx.fillRect(0,0,W,H);ctx.restore();
+  }
+
+  // Stars at night
+  if(G.timeOfDay>0.6&&G.timeOfDay<0.95){
+    const alpha=Math.min(1,(G.timeOfDay>0.85?(0.95-G.timeOfDay)/0.1:(G.timeOfDay-0.6)/0.05));
+    ctx.save();
+    for(let i=0;i<60;i++){
+      const sx=((i*137.5)%W),sy=((i*91.3)%H*0.45);
+      const twinkle=0.4+Math.sin(Date.now()*0.001+i)*0.4;
+      ctx.fillStyle=`rgba(255,255,220,${alpha*twinkle*0.7})`;
+      ctx.fillRect(sx,sy,1.5,1.5);
+    }
+    // Moon
+    const mx=W*0.82,my=H*0.12;
+    ctx.fillStyle=`rgba(255,255,200,${alpha*0.9})`;
+    ctx.beginPath();ctx.arc(mx,my,14,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=`rgba(10,20,60,${alpha*0.85})`;
+    ctx.beginPath();ctx.arc(mx-5,my-2,11,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+  }
+
+  // Sun during day
+  if(G.timeOfDay>0.05&&G.timeOfDay<0.5){
+    const dayP=G.timeOfDay<0.25?(G.timeOfDay-0.05)/0.2:(0.5-G.timeOfDay)/0.25;
+    const sunX=W*(0.15+G.timeOfDay*0.7);
+    const sunY=H*0.08+H*0.06*(1-Math.sin(G.timeOfDay/0.5*Math.PI));
+    ctx.save();
+    // Glow
+    const grd=ctx.createRadialGradient(sunX,sunY,0,sunX,sunY,40);
+    grd.addColorStop(0,`rgba(255,220,50,${0.4*dayP})`);
+    grd.addColorStop(1,'rgba(255,220,50,0)');
+    ctx.fillStyle=grd;ctx.beginPath();ctx.arc(sunX,sunY,40,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=`rgba(255,230,80,${0.9*dayP})`;
+    ctx.beginPath();ctx.arc(sunX,sunY,12,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+  }
+
+  // Rain
+  if(G.weather==='rain'||G.weather==='storm'){
+    ctx.save();
+    const drops=G.weather==='storm'?80:40;
+    const now=Date.now();
+    for(let i=0;i<drops;i++){
+      const x=((i*73+now*0.3)%W);
+      const y=((i*137+now*0.8)%H);
+      const a=G.weather==='storm'?0.55:0.3;
+      ctx.strokeStyle=`rgba(150,180,255,${a})`;
+      ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x-2,y+12);ctx.stroke();
+    }
+    // Dark cloud overlay
+    ctx.fillStyle=G.weather==='storm'?'rgba(20,30,60,0.25)':'rgba(30,40,70,0.15)';
+    ctx.fillRect(0,0,W,H);
+    ctx.restore();
+  }
+
+  // Clouds
+  if(G.weather==='cloudy'||G.weather==='rain'||G.weather==='storm'){
+    ctx.save();
+    const now2=Date.now()*0.00004;
+    for(let i=0;i<4;i++){
+      const cx2=(i*0.28+now2)%1.3*W-W*0.15;
+      const cy2=H*(0.05+i*0.05);
+      const a=G.weather==='cloudy'?0.45:0.65;
+      ctx.fillStyle=`rgba(150,160,180,${a})`;
+      ctx.beginPath();ctx.ellipse(cx2,cy2,60,28,0,0,Math.PI*2);ctx.fill();
+      ctx.beginPath();ctx.ellipse(cx2+30,cy2-10,45,22,0,0,Math.PI*2);ctx.fill();
+      ctx.beginPath();ctx.ellipse(cx2-25,cy2-8,38,20,0,0,Math.PI*2);ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  // Weather icon in HUD
+  const icons={sunny:'☀️',cloudy:'☁️',rain:'🌧️',storm:'⛈️'};
+  const wicon=icons[G.weather]||'☀️';
+  ctx.save();ctx.font='14px serif';ctx.textAlign='right';
+  ctx.fillText(wicon,W-8,22);ctx.restore();
+}
+
 // ==================== INIT ====================
 function zoomFit(){
   // Zoom to show entire island with margin
@@ -2175,6 +2358,7 @@ function init(){
   initPlacePicker();
   setTool('enc');
   renderOps();updateHUD();calcSat();
+  if(hasSave()){setTimeout(()=>{loadGame();},200);}
   setTimeout(()=>notify('🌴 Willkommen auf Dinosaurier-Insel! Scrollrad oder Pinch zum Zoomen!'),700);
   setTimeout(()=>notify('💡 🌍 Knopf oben rechts = Ganze Insel sehen!'),4500);
   requestAnimationFrame(loop);
