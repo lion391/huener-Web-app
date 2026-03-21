@@ -1,0 +1,1786 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#060d18">
+<title>Dino Paradies</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;user-select:none}
+:root{
+  --b0:#060d18;--b1:#091426;--b2:#0d1e3a;--b3:#162a55;
+  --blue:#2d6be4;--blue2:#4d8eff;--accent:#00d4ff;
+  --green:#2ecc71;--amber:#f39c12;--red:#e74c3c;
+  --text:#e8f4ff;--text2:#7eb3ff;
+}
+html,body{height:100%;overflow:hidden;font-family:'Nunito',sans-serif;background:#060d18;color:var(--text)}
+#hud{height:46px;display:flex;align-items:center;gap:8px;padding:0 10px;
+  background:rgba(6,13,24,0.97);border-bottom:1px solid rgba(77,142,255,0.22);
+  flex-shrink:0;z-index:50;position:relative}
+.hlogo{font-family:'Fredoka One',cursive;font-size:1.1rem;
+  background:linear-gradient(90deg,var(--accent),var(--blue2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;white-space:nowrap}
+.hsep{width:1px;height:20px;background:rgba(77,142,255,0.18);flex-shrink:0}
+.hres{display:flex;gap:5px;flex:1;align-items:center;flex-wrap:wrap}
+.rc{display:flex;align-items:center;gap:3px;background:rgba(45,107,228,0.14);
+  border:1px solid rgba(77,142,255,0.2);border-radius:20px;padding:3px 9px;
+  font-size:0.75rem;font-weight:800;white-space:nowrap}
+.rv{color:white}
+.hright{display:flex;gap:4px;flex-shrink:0}
+.spd{background:rgba(45,107,228,0.16);border:1px solid rgba(77,142,255,0.25);border-radius:7px;
+  padding:3px 8px;color:var(--text2);cursor:pointer;font-size:0.75rem;font-weight:800;
+  font-family:'Nunito',sans-serif;transition:all .18s}
+.spd.on{background:var(--blue);border-color:var(--blue2);color:white;box-shadow:0 0 10px rgba(45,107,228,.35)}
+#main{flex:1;display:flex;overflow:hidden;position:relative}
+#wrap{flex:1;overflow:hidden;position:relative;touch-action:none}
+#cvs{display:block}
+/* Toolbar */
+#tb{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);
+  display:flex;gap:5px;align-items:center;flex-wrap:wrap;justify-content:center;
+  background:rgba(6,13,24,0.95);border:1px solid rgba(77,142,255,0.28);
+  border-radius:24px;padding:6px 10px;z-index:60;
+  box-shadow:0 4px 20px rgba(0,212,255,0.12);max-width:calc(100vw - 224px)}
+.tbl{font-size:.58rem;font-weight:900;text-transform:uppercase;letter-spacing:1px;color:var(--accent)}
+.t{background:rgba(45,107,228,0.13);border:1.5px solid rgba(77,142,255,0.18);
+  border-radius:11px;padding:5px 9px;cursor:pointer;font-size:.7rem;font-weight:800;
+  color:var(--text2);transition:all .14s;white-space:nowrap;font-family:'Nunito',sans-serif}
+.t:hover{background:rgba(45,107,228,.28);border-color:var(--blue2)}
+.t.on{background:rgba(0,212,255,0.18);border-color:var(--accent);color:var(--accent);
+  box-shadow:0 0 10px rgba(0,212,255,.22)}
+.tsep{width:1px;height:22px;background:rgba(77,142,255,0.18)}
+/* Enc palette */
+#epal{position:absolute;bottom:70px;left:50%;transform:translateX(-50%);
+  background:rgba(6,13,24,.97);border:1px solid rgba(77,142,255,.28);
+  border-radius:14px;padding:10px 12px;z-index:70;display:none;
+  box-shadow:0 4px 18px rgba(0,212,255,.12);min-width:220px}
+.ep-t{font-size:.68rem;font-weight:800;color:var(--accent);margin-bottom:6px}
+.ep-colors{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.epc{width:26px;height:26px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:all .14s}
+.epc.sel{border-color:white;transform:scale(1.15)}
+.ep-btn{padding:5px 12px;border:1.5px solid var(--blue2);border-radius:10px;
+  color:var(--text2);font-weight:800;font-size:.72rem;cursor:pointer;
+  background:rgba(45,107,228,.18);font-family:'Nunito',sans-serif;margin-right:5px}
+.ep-btn.g{border-color:#2ecc71;color:#2ecc71;background:rgba(46,204,113,.15)}
+/* Sidebar */
+#sb{width:208px;flex-shrink:0;
+  background:rgba(6,13,24,.98);border-left:1px solid rgba(77,142,255,.18);
+  display:flex;flex-direction:column;overflow:hidden}
+.stabs{display:flex;border-bottom:1px solid rgba(77,142,255,.16)}
+.stab{flex:1;padding:7px 2px;border:none;background:transparent;
+  color:rgba(255,255,255,.28);font-size:.62rem;font-weight:800;cursor:pointer;
+  font-family:'Nunito',sans-serif;border-bottom:2px solid transparent;transition:all .18s}
+.stab.on{color:var(--accent);border-bottom-color:var(--accent)}
+.sc{flex:1;overflow-y:auto;padding:8px;
+  scrollbar-width:thin;scrollbar-color:rgba(77,142,255,.2) transparent}
+.bl{font-size:.58rem;font-weight:900;text-transform:uppercase;letter-spacing:1px;
+  color:var(--accent);margin:8px 0 5px;display:flex;align-items:center;gap:4px}
+.bl::after{content:'';flex:1;height:1px;background:rgba(0,212,255,.14)}
+/* Research tree item */
+.ritem{background:rgba(45,107,228,.09);border:1.5px solid rgba(77,142,255,.14);
+  border-radius:9px;padding:7px;margin-bottom:5px;cursor:pointer;transition:all .14s}
+.ritem:hover{background:rgba(45,107,228,.2);border-color:var(--blue2)}
+.ritem.done{border-color:#2ecc71;background:rgba(46,204,113,.1)}
+.ritem.locked{opacity:.35;cursor:not-allowed}
+.ri-top{display:flex;align-items:center;gap:7px;margin-bottom:3px}
+.ri-em{font-size:1.4rem}
+.ri-n{font-weight:800;color:white;font-size:.78rem}
+.ri-c{font-size:.6rem;color:var(--amber);font-weight:700}
+.ri-desc{font-size:.64rem;color:var(--text2);line-height:1.4}
+/* Dino cards */
+.dcard{background:rgba(45,107,228,.08);border:1px solid rgba(77,142,255,.12);border-radius:9px;
+  padding:7px;margin-bottom:5px;cursor:pointer;display:flex;align-items:center;gap:7px;transition:all .13s}
+.dcard:hover{background:rgba(45,107,228,.18)}
+.dem{font-size:1.6rem;flex-shrink:0}
+.db{flex:1;min-width:0}
+.dn{font-weight:800;color:white;font-size:.78rem}
+.ds{font-size:.62rem;color:var(--text2)}
+.hbar{height:4px;border-radius:2px;background:rgba(255,255,255,.08);margin-top:4px;overflow:hidden}
+.hf{height:100%;border-radius:2px;transition:width .4s}
+.fdb{padding:3px 7px;background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.28);
+  border-radius:7px;color:var(--accent);font-weight:800;font-size:.62rem;cursor:pointer;
+  font-family:'Nunito',sans-serif;flex-shrink:0}
+/* Stats */
+.srow{display:flex;justify-content:space-between;padding:5px 0;
+  border-bottom:1px solid rgba(77,142,255,.08);font-size:.72rem}
+.srow:last-child{border:none}
+.sk{color:var(--text2)}.sv{font-weight:800;color:white}
+.tip{background:rgba(45,107,228,.07);border:1px solid rgba(77,142,255,.13);
+  border-radius:9px;padding:7px;margin-top:7px;font-size:.68rem;color:var(--text2);line-height:1.55}
+.tip b{color:var(--accent)}
+/* Modals */
+.mbg{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:200;
+  display:none;align-items:flex-end;justify-content:center}
+.mbg.open{display:flex}
+.msh{background:linear-gradient(180deg,#0d1e3a 0%,#060d18 100%);
+  border:1px solid rgba(77,142,255,.28);border-radius:20px 20px 0 0;
+  padding:1.1rem;width:100%;max-width:480px;max-height:84vh;overflow-y:auto;
+  animation:up .24s ease;box-shadow:0 -5px 28px rgba(45,107,228,.22)}
+@keyframes up{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.mh{width:32px;height:4px;background:rgba(77,142,255,.28);border-radius:2px;margin:0 auto .85rem}
+.mclose{width:100%;margin-top:.85rem;padding:.62rem;background:rgba(77,142,255,.1);
+  border:1px solid rgba(77,142,255,.2);border-radius:11px;color:var(--text2);
+  font-family:'Nunito',sans-serif;font-weight:800;cursor:pointer;font-size:.86rem}
+.di-name{font-family:'Fredoka One',cursive;font-size:1.65rem;
+  background:linear-gradient(90deg,var(--accent),var(--blue2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;text-align:center}
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:.6rem 0}
+.sbox{background:rgba(45,107,228,.1);border:1px solid rgba(77,142,255,.16);border-radius:9px;padding:.55rem;text-align:center}
+.sv2{font-weight:800;font-size:.9rem;color:white}
+.sk2{font-size:.6rem;color:var(--text2);margin-top:2px}
+.fp{background:rgba(0,212,255,.05);border-left:3px solid var(--accent);
+  border-radius:0 9px 9px 0;padding:.65rem;margin:.5rem 0;
+  font-size:.76rem;color:rgba(255,255,255,.85);line-height:1.6}
+.fk{background:rgba(45,107,228,.09);border:1.5px solid rgba(77,142,255,.2);
+  border-radius:9px;padding:.65rem;font-size:.76rem;color:rgba(255,255,255,.9);line-height:1.55}
+.fk::before{content:'🦕  '}
+.badge{display:inline-block;font-size:.58rem;font-weight:800;padding:2px 7px;border-radius:10px;margin-bottom:.4rem}
+.bc{background:rgba(231,76,60,.18);color:#ff9999}
+.bh{background:rgba(46,204,113,.18);color:#99ffbb}
+.bf{background:rgba(0,212,255,.12);color:#aaeeff}
+.bw{background:rgba(52,152,219,.18);color:#99ccff}
+.abtn{width:100%;padding:.62rem;border:none;border-radius:11px;font-family:'Nunito',sans-serif;
+  font-weight:800;font-size:.86rem;cursor:pointer;margin-top:5px}
+.af{background:linear-gradient(135deg,#27ae60,#2ecc71);color:white}
+.dpgrid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:.5rem}
+.dpitem{background:rgba(45,107,228,.1);border:1.5px solid rgba(77,142,255,.16);
+  border-radius:11px;padding:9px;cursor:pointer;text-align:center;transition:all .13s}
+.dpitem:hover{background:rgba(45,107,228,.24);border-color:var(--blue2)}
+.dpitem.locked{opacity:.28;cursor:not-allowed}
+.dp-em{font-size:1.9rem;margin-bottom:3px}
+/* Quiz */
+.qmode{display:flex;background:rgba(45,107,228,.1);border-radius:20px;padding:3px;margin-bottom:10px;gap:3px}
+.qmb{flex:1;padding:4px;border:none;border-radius:17px;font-family:'Nunito',sans-serif;
+  font-weight:800;font-size:.75rem;cursor:pointer;transition:all .18s}
+.qmb.on{background:var(--blue);color:white}
+.qmb:not(.on){background:transparent;color:rgba(255,255,255,.35)}
+.qq{font-size:.93rem;font-weight:800;color:white;text-align:center;margin-bottom:.85rem;line-height:1.4}
+.qopts{display:flex;flex-direction:column;gap:6px}
+.qopt{padding:.62rem 1rem;background:rgba(45,107,228,.09);border:1.5px solid rgba(77,142,255,.16);
+  border-radius:10px;color:white;font-weight:700;font-size:.84rem;cursor:pointer;text-align:left;
+  transition:all .12s;font-family:'Nunito',sans-serif}
+.qopt:hover{background:rgba(45,107,228,.24);border-color:var(--blue2)}
+.qopt.correct{background:rgba(46,204,113,.22);border-color:#2ecc71}
+.qopt.wrong{background:rgba(231,76,60,.22);border-color:#e74c3c}
+.qfact{background:rgba(0,212,255,.06);border-left:3px solid var(--accent);
+  border-radius:0 9px 9px 0;padding:.65rem;margin-top:.65rem;
+  font-size:.76rem;color:rgba(255,255,255,.88);line-height:1.55;display:none}
+.qrew{text-align:center;color:#f1c40f;font-weight:800;font-size:.84rem;margin-top:5px;display:none}
+.qnext{width:100%;margin-top:.65rem;padding:.62rem;background:var(--blue);color:white;border:none;
+  border-radius:11px;font-family:'Nunito',sans-serif;font-weight:800;font-size:.88rem;cursor:pointer;display:none}
+/* Notif */
+.notif{position:fixed;top:54px;left:50%;transform:translateX(-50%) translateY(-5px);
+  background:rgba(6,13,24,.97);border:1.5px solid var(--accent);color:white;
+  padding:5px 15px;border-radius:20px;font-weight:700;font-size:.78rem;z-index:400;
+  opacity:0;transition:all .26s;white-space:nowrap;max-width:90vw;text-align:center;pointer-events:none}
+.notif.show{opacity:1;transform:translateX(-50%) translateY(0)}
+/* Quiz FAB */
+#qfab{position:absolute;bottom:76px;right:12px;width:48px;height:48px;border-radius:50%;border:none;
+  background:linear-gradient(135deg,var(--blue),var(--accent));font-size:1.2rem;cursor:pointer;
+  box-shadow:0 4px 16px rgba(0,212,255,.38);z-index:80;transition:transform .14s;
+  display:flex;align-items:center;justify-content:center}
+#qfab:active{transform:scale(.88)}
+/* Alert popup */
+#alert-box{position:fixed;top:60px;left:50%;transform:translateX(-50%);
+  background:rgba(9,18,38,.97);border:1.5px solid var(--amber);
+  border-radius:14px;padding:10px 16px;z-index:500;display:none;
+  max-width:280px;text-align:center;box-shadow:0 4px 20px rgba(243,156,18,.25)}
+#alert-box .at{font-size:.8rem;font-weight:800;color:var(--amber);margin-bottom:4px}
+#alert-box .ab{font-size:.72rem;color:var(--text2);line-height:1.45}
+/* mobile */
+#bot{display:none;background:rgba(6,13,24,.98);border-top:1px solid rgba(77,142,255,.16);flex-shrink:0}
+.btabs{display:flex}
+.btab{flex:1;padding:7px 0;border:none;background:transparent;color:rgba(255,255,255,.28);
+  font-size:.56rem;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;
+  display:flex;flex-direction:column;align-items:center;gap:2px;transition:color .18s}
+.btab.on{color:var(--accent)}.bti{font-size:1.05rem}
+@media(max-width:640px){
+  #sb{display:none}
+  #sb.mopen{display:flex;position:fixed;right:0;top:0;bottom:0;z-index:150;width:212px}
+  #bot{display:block}
+  #qfab{bottom:104px}
+  #tb{max-width:calc(100vw - 16px)}
+}
+</style>
+</head>
+<body>
+<div id="hud">
+  <div class="hlogo">🦕 Dino Paradies</div>
+  <div class="hsep"></div>
+  <div class="hres">
+    <div class="rc">💰 <span class="rv" id="hm">5000</span></div>
+    <div class="rc">⭐ <span class="rv" id="hs">--</span></div>
+    <div class="rc">👥 <span class="rv" id="hv">0</span></div>
+    <div class="rc">🔬 <span class="rv" id="hr">0%</span></div>
+    <div class="rc">📅 <span class="rv" id="hd">1</span></div>
+  </div>
+  <div class="hright">
+    <button class="spd" onclick="zoomAt(1.25,W/2,H/2)" style="font-size:.9rem;padding:3px 7px">+</button>
+    <button class="spd" onclick="zoomAt(0.8,W/2,H/2)" style="font-size:.9rem;padding:3px 7px">-</button>
+    <button class="spd" onclick="zoomFit()" title="Ganze Insel" style="font-size:.7rem">🌍</button>
+    <div class="hsep"></div>
+    <button class="spd on" id="s1" onclick="setSpd(1)">▶</button>
+    <button class="spd" id="s2" onclick="setSpd(2)">▶▶</button>
+    <button class="spd" id="s3" onclick="setSpd(3)">▶▶▶</button>
+  </div>
+</div>
+<div id="main">
+  <div id="wrap">
+    <canvas id="cvs"></canvas>
+    <!-- Toolbar -->
+    <div id="tb">
+      <span class="tbl">Modus:</span>
+      <button class="t" id="t-pan" onclick="setTool('pan')">✋ Kamera</button>
+      <div class="tsep"></div>
+      <button class="t on" id="t-enc" onclick="setTool('enc')">🖊️ Gehege</button>
+      <button class="t" id="t-road" onclick="setTool('road')">🛣️ Strasse</button>
+      <button class="t" id="t-place" onclick="setTool('place')">🏗️ Gebäude</button>
+      <div class="tsep"></div>
+      <button class="t" id="t-del" onclick="setTool('del')" style="color:#ff9999">🗑️ Löschen</button>
+    </div>
+    <!-- Enc palette -->
+    <div id="epal">
+      <div class="ep-t">Gehegetyp & Farbe</div>
+      <div class="ep-colors" id="ep-colors"></div>
+      <div style="font-size:.64rem;color:var(--text2);margin-bottom:7px;line-height:1.4">
+        Zeichne den Umriss frei auf der Insel. Klicke / tippe mehrere Punkte oder ziehe durch.
+      </div>
+      <button class="ep-btn g" onclick="finishEnc()">✓ Fertigstellen</button>
+      <button class="ep-btn" onclick="cancelEnc()">✕ Abbrechen</button>
+    </div>
+    <!-- Place picker -->
+    <div id="place-picker" style="position:absolute;bottom:70px;left:50%;transform:translateX(-50%);
+      background:rgba(6,13,24,.97);border:1px solid rgba(77,142,255,.28);border-radius:14px;
+      padding:10px 12px;z-index:70;display:none;box-shadow:0 4px 18px rgba(0,212,255,.12);min-width:240px">
+      <div style="font-size:.68rem;font-weight:800;color:var(--accent);margin-bottom:7px">Gebäude platzieren</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px" id="place-grid"></div>
+      <button class="ep-btn" style="margin-top:7px;width:100%" onclick="document.getElementById('place-picker').style.display='none'">✕ Schließen</button>
+    </div>
+    <button id="qfab" onclick="openQuiz()">🧠</button>
+  </div>
+  <div id="sb">
+    <div class="stabs">
+      <button class="stab on" onclick="goTab('ops')">⚙️ Ops</button>
+      <button class="stab" onclick="goTab('research')">🔬 Forschung</button>
+      <button class="stab" onclick="goTab('dinos')">🦖 Dinos</button>
+    </div>
+    <div class="sc" id="sc"></div>
+  </div>
+</div>
+<div id="bot"><div class="btabs">
+  <button class="btab on" onclick="mobTab('ops')"><div class="bti">⚙️</div>Ops</button>
+  <button class="btab" onclick="mobTab('research')"><div class="bti">🔬</div>Forschung</button>
+  <button class="btab" onclick="mobTab('dinos')"><div class="bti">🦖</div>Dinos</button>
+</div></div>
+
+<!-- Dino picker modal -->
+<div class="mbg" id="dino-picker">
+  <div class="msh">
+    <div class="mh"></div>
+    <div style="font-family:'Fredoka One',cursive;font-size:1.25rem;color:var(--accent);margin-bottom:.6rem">Dino einsetzen</div>
+    <div style="font-size:.72rem;color:var(--text2);margin-bottom:.75rem" id="dp-info"></div>
+    <div class="dpgrid" id="dp-grid"></div>
+    <button class="mclose" onclick="document.getElementById('dino-picker').classList.remove('open')">✕ Schließen</button>
+  </div>
+</div>
+<!-- Detail modal -->
+<div class="mbg" id="dm"><div class="msh" id="dc"></div></div>
+<!-- Quiz modal -->
+<div class="mbg" id="qm"><div class="msh" id="qc"></div></div>
+<!-- Alert -->
+<div id="alert-box"><div class="at" id="at"></div><div class="ab" id="ab"></div></div>
+<div class="notif" id="notif"></div>
+
+<script>
+// ==================== DATA ====================
+const DINOS=[
+  {id:'trex',n:'T-Rex',lat:'Tyrannosaurus rex',em:'🦖',type:'carnivore',
+   era:'Kreide',len:'12 m',wt:'8 t',diet:'Fleischfresser',cost:1200,inc:90,up:18,att:5,
+   col:'#8B2020',col2:'#5a1010',belly:'#c4785a',spd:.55,unlock:'research_carnivore',
+   fact:'Beißkraft 35.000 Newton. Sehschärfe dreimal besser als ein Adler. Nachwachsende Zähne.',
+   kid:'T-Rex war so groß wie ein Haus! Seine Arme waren winzig! 😄'},
+  {id:'trike',n:'Triceratops',lat:'Triceratops horridus',em:'🦕',type:'herbivore',
+   era:'Kreide',len:'9 m',wt:'6 t',diet:'Pflanzenfresser',cost:700,inc:55,up:11,att:4,
+   col:'#5a8a3a',col2:'#3a6020',belly:'#a0c080',spd:.38,unlock:null,
+   fact:'3 Hörner dienten zur Kommunikation und Partnerwahl, nicht nur zur Verteidigung.',
+   kid:'3 Hörner und keine Angst vor dem T-Rex! 💪'},
+  {id:'brachi',n:'Brachiosaurus',lat:'Brachiosaurus altithorax',em:'🦕',type:'herbivore',
+   era:'Jura',len:'26 m',wt:'50 t',diet:'Pflanzenfresser',cost:1500,inc:105,up:24,att:5,
+   col:'#4a7a5a',col2:'#2a5a3a',belly:'#8ab89a',spd:.28,unlock:'research_sauropod',
+   fact:'Brauchte 750 mmHg Blutdruck um Blut zum Kopf zu pumpen.',
+   kid:'Hals länger als ein Schulbus! 🌳'},
+  {id:'stego',n:'Stegosaurus',lat:'Stegosaurus armatus',em:'🦕',type:'herbivore',
+   era:'Jura',len:'9 m',wt:'5 t',diet:'Pflanzenfresser',cost:650,inc:50,up:10,att:4,
+   col:'#3a6a3a',col2:'#224422',belly:'#80aa70',spd:.36,unlock:null,
+   fact:'Gehirn nur 80g. Rückenplatten zur Thermoregulierung — wechselten Farbe!',
+   kid:'Platten am Rücken wie eine Klimaanlage! ☀️'},
+  {id:'raptor',n:'Velociraptor',lat:'Velociraptor mongoliensis',em:'🦖',type:'carnivore',
+   era:'Kreide',len:'2 m',wt:'15 kg',diet:'Fleischfresser',cost:500,inc:40,up:8,att:3,
+   col:'#7a5a20',col2:'#5a3a10',belly:'#d4a060',spd:.9,unlock:null,
+   fact:'Truthahngroß mit Federn! Sichelklaue war ein Sensor, nicht zum Stechen.',
+   kid:'So groß wie ein Huhn — mit Federn! Aber blitzschnell! 💨'},
+  {id:'ankylo',n:'Ankylosaurus',lat:'Ankylosaurus magniventris',em:'🦕',type:'herbivore',
+   era:'Kreide',len:'10 m',wt:'6 t',diet:'Pflanzenfresser',cost:800,inc:60,up:12,att:4,
+   col:'#6a5a3a',col2:'#4a3a20',belly:'#b0a080',spd:.3,unlock:'research_armored',
+   fact:'Sogar Augenlider gepanzert. Schwanzknochen konnte T-Rex-Knochen brechen.',
+   kid:'Lebendiger Panzer! Schwanz wie ein Hammer! 🔨'},
+  {id:'ptero',n:'Pteranodon',lat:'Pteranodon longiceps',em:'🐉',type:'flying',
+   era:'Kreide',len:'6 m',wt:'20 kg',diet:'Fischfresser',cost:900,inc:70,up:13,att:4,
+   col:'#2a5a8a',col2:'#1a3a6a',belly:'#6aaad4',spd:.82,unlock:'research_flying',
+   fact:'Kopfkamm = passiver aerodynamischer Steuerungskiel ohne Muskeln.',
+   kid:'Flog wie ein Riesenvogel und fing Fische! ✈️'},
+  {id:'mosy',n:'Mosasaurus',lat:'Mosasaurus hoffmannii',em:'🐊',type:'water',
+   era:'Kreide',len:'17 m',wt:'15 t',diet:'Meeresjäger',cost:2000,inc:130,up:28,att:5,
+   col:'#1a4a6a',col2:'#0a2a4a',belly:'#4a8ab0',spd:.42,unlock:'research_marine',
+   fact:'Keine Dino sondern Riesenschuppenechse. Doppelt-gelenkige Kiefer wie Schlangen.',
+   kid:'Größer als ein U-Boot! König des Ozeans! 👑'},
+  {id:'para',n:'Parasaurolophus',lat:'Parasaurolophus walkeri',em:'🦕',type:'herbivore',
+   era:'Kreide',len:'10 m',wt:'2.5 t',diet:'Pflanzenfresser',cost:600,inc:48,up:9,att:3,
+   col:'#6a4a20',col2:'#4a3010',belly:'#c09060',spd:.45,unlock:null,
+   fact:'Der hohle Schädelkamm erzeugte tiefe Rufe zur Kommunikation über weite Strecken.',
+   kid:'Parasaurolophus hatte einen Kamm am Kopf wie eine Trompete! 🎺'},
+  {id:'spino',n:'Spinosaurus',lat:'Spinosaurus aegyptiacus',em:'🦖',type:'carnivore',
+   era:'Kreide',len:'15 m',wt:'14 t',diet:'Fleisch & Fische',cost:1800,inc:120,up:25,att:5,
+   col:'#2a4a6a',col2:'#1a2a4a',belly:'#5a8ab0',spd:.48,unlock:'research_carnivore',
+   fact:'Grösster bekannter Raubdinosaurier. Lebte halbaquatisch wie ein Krokodil.',
+   kid:'Spinosaurus war noch größer als T-Rex und schwamm im Fluss! 🌊'},
+];
+
+const RESEARCH=[
+  {id:'research_carnivore',n:'Raubtier-Genetik',em:'🧬',cost:800,time:3,
+   desc:'Schaltet T-Rex und Spinosaurus frei',prereq:null,done:false},
+  {id:'research_sauropod',n:'Sauropoden-Forschung',em:'🔬',cost:600,time:2,
+   desc:'Schaltet Brachiosaurus frei',prereq:null,done:false},
+  {id:'research_armored',n:'Panzerdinosaurier',em:'🛡️',cost:700,time:2,
+   desc:'Schaltet Ankylosaurus frei',prereq:null,done:false},
+  {id:'research_flying',n:'Flugsaurier-DNA',em:'🧪',cost:900,time:3,
+   desc:'Schaltet Pteranodon frei',prereq:null,done:false},
+  {id:'research_marine',n:'Meeresreptilien-Labor',em:'🌊',cost:1100,time:4,
+   desc:'Schaltet Mosasaurus frei',prereq:null,done:false},
+  {id:'research_happiness',n:'Verhaltensforschung',em:'🐾',cost:400,time:1,
+   desc:'Dinos verlieren langsamer Glück',prereq:null,done:false},
+  {id:'research_income',n:'Premium-Tickets',em:'🎫',cost:500,time:2,
+   desc:'Besucher zahlen 50% mehr',prereq:null,done:false},
+  {id:'research_capacity',n:'Park-Expansion',em:'🗺️',cost:600,time:2,
+   desc:'Mehr Besucher gleichzeitig',prereq:null,done:false},
+];
+
+const BUILDINGS=[
+  {id:'gate',n:'Eingang',em:'🚪',cost:0},
+  {id:'shop',n:'Souvenir',em:'🏪',cost:350},
+  {id:'rest',n:'Restaurant',em:'🍔',cost:450},
+  {id:'medical',n:'Erste Hilfe',em:'🏥',cost:300},
+  {id:'ranger',n:'Ranger-Station',em:'🏕️',cost:500},
+  {id:'heli',n:'Helipad',em:'🚁',cost:800},
+  {id:'tree',n:'Palme',em:'🌴',cost:30},
+  {id:'rock',n:'Felsen',em:'🪨',cost:20},
+];
+
+const QUIZ={
+  kid:[
+    {em:'🦖',q:'Was aß der T-Rex?',opts:['🥦 Salat','🍖 Fleisch','🍎 Äpfel','🌿 Gras'],c:1,f:'T-Rex war Fleischfresser mit 50+ riesigen Zähnen! 🦷',r:100},
+    {em:'🦕',q:'Wie viele Hörner hatte Triceratops?',opts:['1','2','3','4'],c:2,f:'"Tri" = 3 auf Lateinisch. Die Hörner waren sein Schutz! 🔱',r:100},
+    {em:'🦕',q:'Was fraß Brachiosaurus?',opts:['Fische','Dinos','Baumblätter','Steine'],c:2,f:'Sein Hals war so lang um ganz oben zu fressen! 🌳',r:100},
+    {em:'🐉',q:'Was konnte Pteranodon?',opts:['Schwimmen','Fliegen','Graben','Unsichtbar sein'],c:1,f:'Er konnte fliegen und Fische fangen! 🐟',r:100},
+    {em:'🦕',q:'Was hatte Stegosaurus am Rücken?',opts:['Flügel','Platten','Fell','Stacheln'],c:1,f:'Platten zur Temperaturregulierung! ☀️',r:100},
+  ],
+  teen:[
+    {em:'🦖',q:'Beißkraft des T-Rex in Newton?',opts:['5.000','15.000','35.000','80.000'],c:2,f:'35.000 N = dreimal ein Nilkrokodil. Zähne 30cm, nachwachsend.',r:150},
+    {em:'🦕',q:'Warum die Stegosaurus-Platten?',opts:['Abwehr','Tarnung','Thermoregulierung','Fettreserven'],c:2,f:'CT-Scans zeigten Blutgefässnetz — Farbe konnte wechseln zur Kommunikation!',r:150},
+    {em:'🐊',q:'Warum ist Mosasaurus kein Dinosaurier?',opts:['Zu jung','Im Wasser','Squamata (Schuppenechse)','Zu klein'],c:2,f:'Verwandt mit Waranen & Schlangen — komplett anderer Stammbaum.',r:150},
+    {em:'🐉',q:'Wozu diente der Pteranodon-Kamm?',opts:['Balz','Aerodynamischer Steuerungskiel','Thermoregulierung','Schutz'],c:1,f:'Passiver Kiel wie ein Heckflügel — kein Muskel nötig.',r:150},
+    {em:'🦖',q:'Wie gross war Velociraptor wirklich?',opts:['Pferd','Truthahn','Mensch','Auto'],c:1,f:'Truthahngroß mit Federn! Jurassic Park zeigte Deinonychus.',r:150},
+  ]
+};
+
+const ENC_TYPES=[
+  {id:'std',n:'Standard',col:'rgba(30,70,25,0.82)',fence:'#4a8a20',label:'Grün'},
+  {id:'savanna',n:'Savanne',col:'rgba(90,65,20,0.82)',fence:'#d4a020',label:'Sand'},
+  {id:'tropical',n:'Tropisch',col:'rgba(20,65,50,0.82)',fence:'#20c070',label:'Tropisch'},
+  {id:'volcanic',n:'Vulkanisch',col:'rgba(80,20,10,0.82)',fence:'#e04a10',label:'Rot'},
+  {id:'arctic',n:'Arktisch',col:'rgba(40,60,100,0.82)',fence:'#60a0e0',label:'Blau'},
+  {id:'water',n:'Wasser',col:'rgba(10,40,90,0.82)',fence:'#10a0d0',label:'Wasser'},
+];
+
+// ==================== CANVAS ====================
+const cvs=document.getElementById('cvs');
+const ctx=cvs.getContext('2d');
+let W,H;
+
+// ==================== ISLAND GENERATION ====================
+const ISLAND_R=2200; // radius of island
+const WORLD=5000;    // total world size
+let islandCache=null;
+let terrainCanvas=null;
+
+// Simplex-like noise via seeded pseudo-random
+function seededRand(x,y,s=42){
+  let h=s^(x*374761393)^(y*668265263);
+  h=(h^(h>>13))*1274126177;h=h^(h>>16);
+  return(h>>>0)/4294967296;
+}
+function smoothNoise(x,y,freq,s){
+  const gx=Math.floor(x*freq),gy=Math.floor(y*freq);
+  const fx=(x*freq)-gx,fy=(y*freq)-gy;
+  const a=seededRand(gx,gy,s),b=seededRand(gx+1,gy,s);
+  const c=seededRand(gx,gy+1,s),d=seededRand(gx+1,gy+1,s);
+  const ux=fx*fx*(3-2*fx),uy=fy*fy*(3-2*fy);
+  return a+(b-a)*ux+(c-a)*uy+(a-b-c+d)*ux*uy;
+}
+function fbm(x,y,oct=5,s=42){
+  let v=0,amp=1,freq=1,max=0;
+  for(let i=0;i<oct;i++){v+=smoothNoise(x,y,freq,s+i*100)*amp;max+=amp;amp*=0.5;freq*=2.1;}
+  return v/max;
+}
+
+// Terrain types based on height
+function terrainType(nx,ny,dist){
+  const r=dist/ISLAND_R;
+  if(r>1.0)return'deep';
+  if(r>0.88)return'shallow';
+  if(r>0.82)return'beach';
+  const h=fbm(nx,ny,6,7);
+  if(h>0.72)return'mountain';
+  if(h>0.62)return'highland';
+  if(h>0.45)return'forest';
+  if(h>0.32)return'grass';
+  return'lowland';
+}
+
+const TERRAIN_COLS={
+  deep:'#0a1e3a',
+  shallow:'#1a4a7a',
+  beach:'#c8a86a',
+  lowland:'#4a7a3a',
+  grass:'#3a6a2a',
+  forest:'#2a5a1a',
+  highland:'#5a6a4a',
+  mountain:'#7a7a6a',
+};
+
+function buildTerrainCanvas(){
+  const res=4; // pixels per terrain sample
+  const size=Math.ceil(WORLD/res);
+  const tc=document.createElement('canvas');
+  tc.width=size;tc.height=size;
+  const tctx=tc.getContext('2d');
+  const img=tctx.createImageData(size,size);
+  const cx=WORLD/2,cy=WORLD/2;
+  for(let py=0;py<size;py++){
+    for(let px=0;px<size;px++){
+      const wx=px*res,wy=py*res;
+      const dx=wx-cx,dy=wy-cy;
+      const dist=Math.sqrt(dx*dx+dy*dy);
+      // Add coastline variation
+      const angle=Math.atan2(dy,dx);
+      const coastal=fbm(Math.cos(angle)*3+10,Math.sin(angle)*3+10,3,99)*300;
+      const adjDist=dist-coastal;
+      const nx=wx/WORLD*6,ny=wy/WORLD*6;
+      const t=terrainType(nx,ny,adjDist);
+      let r,g,b;
+      switch(t){
+        case'deep':r=10;g=30;b=58;break;
+        case'shallow':r=20;g=65;b=100;break;
+        case'beach':r=200;g=170;b=106;break;
+        case'lowland':r=74;g=122;b=58;break;
+        case'grass':r=58;g=106;b=42;break;
+        case'forest':r=38;g=88;b=24;break;
+        case'highland':r=88;g=106;b=74;break;
+        case'mountain':r=122;g=122;b=106;break;
+        default:r=10;g=30;b=58;
+      }
+      // Add micro-variation
+      const mv=(seededRand(px,py,33)-0.5)*14;
+      const i=(py*size+px)*4;
+      img.data[i]=Math.max(0,Math.min(255,r+mv));
+      img.data[i+1]=Math.max(0,Math.min(255,g+mv));
+      img.data[i+2]=Math.max(0,Math.min(255,b+mv));
+      img.data[i+3]=255;
+    }
+  }
+  tctx.putImageData(img,0,0);
+  // Draw forest trees
+  tctx.fillStyle='rgba(20,60,10,0.5)';
+  for(let i=0;i<3000;i++){
+    const tx=seededRand(i,0,77)*WORLD;
+    const ty=seededRand(i,1,77)*WORLD;
+    const ddx=tx-cx,ddy=ty-cy;
+    const dd=Math.sqrt(ddx*ddx+ddy*ddy);
+    const an=Math.atan2(ddy,ddx);
+    const ca=fbm(Math.cos(an)*3+10,Math.sin(an)*3+10,3,99)*300;
+    if(dd-ca>ISLAND_R*0.82)continue;
+    const nh=fbm(tx/WORLD*6,ty/WORLD*6,6,7);
+    if(nh>0.45&&nh<0.72){
+      const ts=(seededRand(i,2,77)*6+3)/res;
+      tctx.beginPath();
+      tctx.arc(tx/res,ty/res,ts,0,Math.PI*2);
+      tctx.fill();
+    }
+  }
+  // Shore foam
+  tctx.strokeStyle='rgba(255,255,255,0.25)';tctx.lineWidth=3/res;
+  for(let i=0;i<200;i++){
+    const an=Math.random()*Math.PI*2;
+    const coastal2=fbm(Math.cos(an)*3+10,Math.sin(an)*3+10,3,99)*300;
+    const sr=ISLAND_R*0.86+coastal2+Math.random()*40-20;
+    const sx=cx+Math.cos(an)*sr,sy=cy+Math.sin(an)*sr;
+    tctx.beginPath();
+    tctx.arc(sx/res,sy/res,(Math.random()*20+8)/res,0,Math.PI*2);
+    tctx.stroke();
+  }
+  return tc;
+}
+
+// ==================== WORLD OBJECTS (trees, rocks scattered) ====================
+let worldObjects=[];
+function generateWorldObjects(){
+  const cx=WORLD/2,cy=WORLD/2;
+  worldObjects=[];
+  const rng=(i,s)=>seededRand(i,s,55);
+  for(let i=0;i<1200;i++){
+    const wx=rng(i,0)*WORLD,wy=rng(i,1)*WORLD;
+    const dx=wx-cx,dy=wy-cy;
+    const dist=Math.sqrt(dx*dx+dy*dy);
+    const an=Math.atan2(dy,dx);
+    const coastal=fbm(Math.cos(an)*3+10,Math.sin(an)*3+10,3,99)*300;
+    if(dist-coastal>ISLAND_R*0.78)continue;
+    const nh=fbm(wx/WORLD*6,wy/WORLD*6,6,7);
+    if(nh<0.38||nh>0.74)continue;
+    const type=rng(i,2)<0.7?'tree':'rock';
+    const sz=type==='tree'?(rng(i,3)*10+8):(rng(i,3)*7+5);
+    worldObjects.push({x:wx,y:wy,type,sz,r:rng(i,4)*Math.PI*2});
+  }
+}
+
+// ==================== GAME STATE ====================
+const ZOOM_MIN=0.08, ZOOM_MAX=2.0;
+const G={
+  money:5000,day:1,speed:1,tick:0,
+  cam:{x:0,y:0},
+  zoom:1.0,
+  drag:{on:false,sx:0,sy:0,cx:0,cy:0},
+  tool:'enc',
+  enclosures:[],
+  buildings:[],
+  roads:[],
+  visitors:[],
+  sat:50,rating:0,
+  quizMode:'kid',
+  research:[...RESEARCH.map(r=>({...r}))],
+  activeResearch:null,
+  researchTimer:0,
+  incomeBonus:1,
+  happyDecayMod:1,
+  maxVisitors:12,
+  // enc drawing
+  drawing:false,
+  drawPts:[],
+  encType:0,
+  // road drawing
+  roadPts:[],
+  roadDrawing:false,
+  // place tool
+  placeItem:null,
+};
+
+// ==================== CAMERA ====================
+function clampCam(){
+  const z=G.zoom;
+  const margin=Math.min(300,W*0.4);
+  const maxX=margin, minX=-(WORLD*z-W+margin);
+  const maxY=margin, minY=-(WORLD*z-H+margin);
+  G.cam.x=Math.min(maxX,Math.max(minX,G.cam.x));
+  G.cam.y=Math.min(maxY,Math.max(minY,G.cam.y));
+}
+// world -> screen
+function w2s(wx,wy){return{x:wx*G.zoom+G.cam.x, y:wy*G.zoom+G.cam.y}}
+// screen -> world
+function s2w(sx,sy){return{x:(sx-G.cam.x)/G.zoom, y:(sy-G.cam.y)/G.zoom}}
+
+// Zoom around a screen-space pivot point
+function zoomAt(factor, pivotSx, pivotSy){
+  const newZoom=Math.min(ZOOM_MAX,Math.max(ZOOM_MIN,G.zoom*factor));
+  if(newZoom===G.zoom)return;
+  // Adjust cam so world point under pivot stays fixed
+  const wx=(pivotSx-G.cam.x)/G.zoom;
+  const wy=(pivotSy-G.cam.y)/G.zoom;
+  G.zoom=newZoom;
+  G.cam.x=pivotSx-wx*G.zoom;
+  G.cam.y=pivotSy-wy*G.zoom;
+  clampCam();
+}
+
+// ==================== RESIZE ====================
+function resize(){
+  W=document.getElementById('wrap').clientWidth;
+  H=document.getElementById('wrap').clientHeight;
+  cvs.width=W;cvs.height=H;
+  if(!terrainCanvas)terrainCanvas=buildTerrainCanvas();
+  draw();
+}
+window.addEventListener('resize',resize);
+
+// ==================== HELPERS ====================
+function ptInPoly(px,py,pts){
+  let inside=false;
+  for(let i=0,j=pts.length-1;i<pts.length;j=i++){
+    const xi=pts[i].x,yi=pts[i].y,xj=pts[j].x,yj=pts[j].y;
+    if(((yi>py)!==(yj>py))&&px<(xj-xi)*(py-yi)/(yj-yi)+xi)inside=!inside;
+  }
+  return inside;
+}
+function polyBounds(pts){
+  let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;
+  pts.forEach(p=>{x0=Math.min(x0,p.x);y0=Math.min(y0,p.y);x1=Math.max(x1,p.x);y1=Math.max(y1,p.y);});
+  return{x0,y0,x1,y1,cx:(x0+x1)/2,cy:(y0+y1)/2,w:x1-x0,h:y1-y0};
+}
+function polyArea(pts){
+  let a=0;
+  for(let i=0,j=pts.length-1;i<pts.length;j=i++)a+=(pts[j].x+pts[i].x)*(pts[j].y-pts[i].y);
+  return Math.abs(a)/2;
+}
+function isUnlocked(dino){
+  if(!dino.unlock)return true;
+  return G.research.find(r=>r.id===dino.unlock)?.done||false;
+}
+function randRange(a,b){return a+(b-a)*Math.random();}
+
+// ==================== DINO ANIMATIONS ====================
+function initAgent(enc,dinoId){
+  const d=DINOS.find(x=>x.id===dinoId);if(!d)return null;
+  const b=enc.bounds;
+  return{
+    dinoId,id:Date.now()+Math.random(),
+    x:b.cx+randRange(-40,40),y:b.cy+randRange(-40,40),
+    vx:randRange(-1,1)*d.spd,vy:randRange(-1,1)*d.spd,
+    dir:1,bobT:Math.random()*6.28,tailT:Math.random()*6.28,legT:Math.random()*6.28,
+    state:'walk',stateT:0,happiness:5,fedAt:Date.now(),
+  };
+}
+function updateAgent(ag,enc){
+  const d=DINOS.find(x=>x.id===ag.dinoId);if(!d)return;
+  ag.bobT+=0.07;ag.tailT+=0.1;ag.legT+=0.14;ag.stateT--;
+  const decayRate=G.research.find(r=>r.id==='research_happiness')?.done?0.004:0.008;
+  ag.happiness=Math.max(1,ag.happiness-(decayRate*(G.speed)));
+  if(ag.stateT<=0){
+    const rv=Math.random();
+    if(rv<0.08){ag.state='idle';ag.stateT=40+Math.random()*80;}
+    else if(rv<0.12){ag.state='eat';ag.stateT=30+Math.random()*60;}
+    else{ag.state='walk';ag.stateT=60+Math.random()*120;
+      ag.vx=randRange(-1,1)*d.spd*1.4;ag.vy=randRange(-1,1)*d.spd*1.4;}
+  }
+  if(ag.state==='walk'){
+    ag.x+=ag.vx;ag.y+=ag.vy;
+    if(ag.vx>0.05)ag.dir=1;else if(ag.vx<-0.05)ag.dir=-1;
+    if(!ptInPoly(ag.x,ag.y,enc.points)){
+      const b=enc.bounds;
+      const dx=b.cx-ag.x,dy=b.cy-ag.y,dist=Math.sqrt(dx*dx+dy*dy)||1;
+      ag.vx=dx/dist*d.spd+randRange(-0.2,0.2);
+      ag.vy=dy/dist*d.spd+randRange(-0.2,0.2);
+      ag.x+=ag.vx*3;ag.y+=ag.vy*3;
+    }
+  }
+}
+
+// ==================== DINO DRAWING ====================
+const DS=0.36;
+function fi(c){ctx.fillStyle=c}
+function st(c,w){ctx.strokeStyle=c;ctx.lineWidth=w;ctx.lineCap='round';ctx.lineJoin='round'}
+function el(x,y,rx,ry,rot){ctx.beginPath();ctx.ellipse(x,y,rx,ry,rot||0,0,Math.PI*2);ctx.fill();}
+function ci(x,y,r){ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();}
+function pa(pts){ctx.beginPath();pts.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.stroke();}
+function tr(x1,y1,x2,y2,x3,y3){ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.lineTo(x3,y3);ctx.closePath();ctx.fill();}
+function s5(t){return Math.sin(t)*5}
+
+function drawAgent(ag){
+  const d=DINOS.find(x=>x.id===ag.dinoId);if(!d)return;
+  const{x:sx,y:sy}=w2s(ag.x,ag.y);
+  if(sx<-80||sy<-80||sx>W+80||sy>H+80)return;
+  ctx.save();ctx.translate(sx,sy);ctx.scale(ag.dir*DS,DS);
+  drawDinoShape(d,ag);
+  ctx.restore();
+  if(ag.state==='idle'||ag.state==='eat'){
+    ctx.save();ctx.font='9px serif';ctx.textAlign='center';
+    ctx.fillText(ag.state==='eat'?'🍃':'💤',sx+5*ag.dir,sy-13);ctx.restore();
+  }
+  // happiness bar (tiny, only if low)
+  if(ag.happiness<3){
+    ctx.save();
+    const bw=22,bh=3,bx=sx-bw/2,by=sy-16;
+    ctx.fillStyle='rgba(0,0,0,.4)';ctx.fillRect(bx,by,bw,bh);
+    ctx.fillStyle=ag.happiness>2?'#f39c12':'#e74c3c';
+    ctx.fillRect(bx,by,bw*(ag.happiness/5),bh);
+    ctx.restore();
+  }
+}
+
+function drawDinoShape(d,a){
+  const bob=Math.sin(a.bobT)*2;
+  const lA=Math.sin(a.legT)*14;
+  const jaw=a.state==='eat'?5:0;
+  switch(d.id){
+    case'trex':{
+      // tail
+      st(d.col,7);pa([[-8,4+bob],[-22+s5(a.tailT),8],[-30+Math.sin(a.tailT)*8,2]]);
+      // legs
+      [[-4,1],[4,-1]].forEach(([ox,p])=>{
+        ctx.save();ctx.translate(ox,10+bob);ctx.rotate(lA*p*Math.PI/180);
+        st(d.col2,5);pa([[0,0],[0,16]]);st(d.col2,3);pa([[0,16],[5,20]]);ctx.restore();
+      });
+      // tiny arms
+      ctx.save();ctx.translate(6,bob);st(d.col,3);pa([[0,0],[6,5]]);ctx.restore();
+      fi(d.col);el(0,bob,16,10,.1);fi(d.belly);el(0,3+bob,8,6,0);
+      st(d.col,9);pa([[10,-4+bob],[18,-18]]);
+      fi(d.col);el(20,-22,9,6,.3);
+      fi('white');ci(24,-24,2.5);fi('#111');ci(24.5,-24,1.2);
+      st(d.col2,3);pa([[14,-18],[28,-18+jaw]]);
+      break;}
+    case'trike':{
+      const lA2=Math.sin(a.legT)*8,bob2=Math.sin(a.bobT)*1.5;
+      st(d.col,6);pa([[-14,2+bob2],[-24+s5(a.tailT),6],[-28,2+bob2]]);
+      [[-8,1],[8,-1],[-4,.5],[4,-.5]].forEach(([ox,p])=>{
+        ctx.save();ctx.translate(ox,8+bob2);ctx.rotate(lA2*p*Math.PI/180);
+        st(d.col2,5);pa([[0,0],[0,13]]);ctx.restore();
+      });
+      fi(d.col);el(0,bob2,18,11,0);fi(d.belly);el(0,4+bob2,10,7,0);
+      st(d.col,10);pa([[14,-2+bob2],[20,-8]]);
+      fi(d.col);el(24,-10,12,8,0);fi(d.col2);el(16,-10,8,10,0);fi(d.col);el(16,-10,5,7,0);
+      [[26,-18,1],[18,-18,-1],[30,-14,.5]].forEach(([hx,hy,ang])=>{
+        ctx.save();ctx.translate(hx,hy);ctx.rotate(ang*.3);st('#d4c080',3);pa([[0,0],[0,-8]]);ctx.restore();
+      });
+      fi('white');ci(30,-12,2.5);fi('#111');ci(30.5,-12,1.2);
+      break;}
+    case'brachi':{
+      const nW=Math.sin(a.bobT*.5)*5;
+      st(d.col,7);pa([[-16,4+bob],[-28+s5(a.tailT),8],[-36,2+bob]]);
+      [[-10,1],[10,-1],[-5,.5],[5,-.5]].forEach(([ox,p])=>{
+        ctx.save();ctx.translate(ox,12+bob);ctx.rotate(lA*.5*p*Math.PI/180);
+        st(d.col2,6);pa([[0,0],[0,18]]);ctx.restore();
+      });
+      fi(d.col);el(0,bob,20,13,0);fi(d.belly);el(0,5+bob,12,8,0);
+      ctx.beginPath();ctx.moveTo(14,-4+bob);ctx.bezierCurveTo(18,-18,14+nW,-34,16+nW*.5,-48);
+      ctx.strokeStyle=d.col;ctx.lineWidth=11;ctx.lineCap='round';ctx.stroke();
+      fi(d.col);el(17+nW*.5,-52,8,5,.2);
+      fi('white');ci(21+nW*.5,-54,2);fi('#111');ci(21.5+nW*.5,-54,1);
+      break;}
+    case'stego':{
+      const lA3=Math.sin(a.legT)*9,bob3=Math.sin(a.bobT)*1.5;
+      st(d.col,6);pa([[-14,2+bob3],[-24+s5(a.tailT),5],[-30,bob3]]);
+      [-22,-26,-28].forEach(tx=>{
+        ctx.save();ctx.translate(tx,-2+bob3);ctx.rotate(-.3);
+        fi('#c0a020');tr(0,0,3,-7,6,0);ctx.restore();
+      });
+      [[-8,1],[8,-1],[-4,.5],[4,-.5]].forEach(([ox,p])=>{
+        ctx.save();ctx.translate(ox,9+bob3);ctx.rotate(lA3*p*Math.PI/180);
+        st(d.col2,5);pa([[0,0],[0,14]]);ctx.restore();
+      });
+      fi(d.col);el(0,bob3,17,10,0);fi(d.belly);el(0,4+bob3,9,6,0);
+      [-10,-5,0,5,10].forEach((px,i)=>{
+        const ph=9+Math.sin(i*1.2)*4,br=Math.sin(a.bobT+i)*1.5;
+        ctx.beginPath();ctx.moveTo(px,-8+bob3);ctx.lineTo(px-5,-8-ph+br+bob3);ctx.lineTo(px+5,-8-ph+br+bob3);
+        ctx.closePath();
+        const g=ctx.createLinearGradient(px,-8,px,-8-ph);g.addColorStop(0,'#cc4422');g.addColorStop(1,'#ff7744');
+        ctx.fillStyle=g;ctx.fill();
+      });
+      st(d.col,8);pa([[12,-2+bob3],[18,-8]]);fi(d.col);el(22,-12,8,5,-.2);
+      fi('white');ci(27,-14,2);fi('#111');ci(27.5,-14,1);
+      break;}
+    case'raptor':{
+      const lA4=Math.sin(a.legT)*18,bob4=Math.sin(a.bobT)*2;
+      [-2,2,6].forEach(fx=>{
+        ctx.save();ctx.translate(fx,-10+bob4);ctx.rotate(Math.sin(a.tailT+fx)*.1);
+        fi('#8B6914');tr(0,0,-3,-8,3,-8);ctx.restore();
+      });
+      [[-3,1],[3,-1]].forEach(([ox,p])=>{
+        ctx.save();ctx.translate(ox,6+bob4);ctx.rotate(lA4*p*Math.PI/180);
+        st(d.col2,4);pa([[0,0],[-2,12]]);st(d.col2,3);pa([[-2,12],[4,16]]);
+        ctx.beginPath();ctx.arc(4,16,3,0,Math.PI*1.5);ctx.strokeStyle='#333';ctx.lineWidth=2;ctx.stroke();
+        ctx.restore();
+      });
+      st(d.col,5);pa([[-8,2+bob4],[-18,-2],[-24,-4]]);
+      fi(d.col);el(0,bob4,11,7,-.3);fi(d.belly);el(0,3+bob4,5,4,0);
+      st(d.col,6);pa([[8,-4+bob4],[13,-12]]);fi(d.col);el(16,-16,7,4,.3);
+      fi('white');ci(20,-18,2);fi('#111');ci(20.5,-18,1);
+      st(d.col2,2);pa([[10,-14],[22,-13+jaw]]);
+      break;}
+    case'ankylo':{
+      const lA5=Math.sin(a.legT)*7,bob5=Math.sin(a.bobT)*1;
+      st(d.col,6);pa([[-14,2+bob5],[-22+Math.sin(a.tailT)*6,4],[-28,2+bob5]]);
+      fi(d.col2);ci(-28,2+bob5,7);
+      [[-10,1],[10,-1],[-5,.5],[5,-.5]].forEach(([ox,p])=>{
+        ctx.save();ctx.translate(ox,10+bob5);ctx.rotate(lA5*p*Math.PI/180);
+        st(d.col2,6);pa([[0,0],[0,10]]);ctx.restore();
+      });
+      fi(d.col);el(0,bob5,20,8,0);
+      for(let i=-14;i<=14;i+=4)for(let j=-4;j<=4;j+=4){fi(d.col2);ci(i,j-8+bob5,3);fi('#c0a060');ci(i,j-8+bob5,1.5);}
+      [-14,-7,0,7,14].forEach(sx=>{
+        ctx.save();ctx.translate(sx,2+bob5);fi('#8a7a40');tr(-2,0,0,-6,2,0);ctx.restore();
+      });
+      fi(d.belly);el(0,4+bob5,12,5,0);
+      st(d.col,8);pa([[14,-2+bob5],[20,-4]]);fi(d.col);el(24,-4,10,6,-.1);
+      fi('white');ci(30,-5,2);fi('#111');ci(30.5,-5,1);
+      break;}
+    case'ptero':{
+      const wf=Math.sin(a.bobT*2)*18;
+      [1,-1].forEach(side=>{
+        ctx.save();ctx.rotate(side*wf*Math.PI/180);
+        fi(d.col);tr(0,0,side*32,-8,side*28,10);fi(d.col2);tr(side*28,10,side*32,-8,side*14,14);ctx.restore();
+      });
+      fi(d.col);el(0,0,10,6,0);fi(d.belly);el(0,3,5,4,0);
+      st(d.col,5);pa([[6,-2],[12,-8]]);fi(d.col);el(15,-10,9,4,.3);
+      fi('#cc8844');tr(10,-12,6,-24,18,-14);
+      st('#c8a040',3);pa([[20,-9],[34,-10]]);
+      fi('white');ci(17,-12,2);fi('#111');ci(17.5,-12,1);
+      break;}
+    case'mosy':{
+      const bw=Math.sin(a.bobT)*6;
+      ctx.save();ctx.translate(-28,bw*.5);fi(d.col2);tr(0,0,-8,-8,-8,8);ctx.restore();
+      ctx.beginPath();ctx.moveTo(20,0);ctx.bezierCurveTo(10,bw,-10,-bw,-28,bw*.5);
+      ctx.strokeStyle=d.col;ctx.lineWidth=14;ctx.lineCap='round';ctx.stroke();
+      ctx.beginPath();ctx.moveTo(20,0);ctx.bezierCurveTo(10,bw+3,-10,-bw+3,-28,bw*.5+2);
+      ctx.strokeStyle=d.belly;ctx.lineWidth=8;ctx.lineCap='round';ctx.stroke();
+      [[-10,1],[5,-1]].forEach(([ox,p])=>{ctx.save();ctx.translate(ox,bw*p*.3);fi(d.col2);el(0,8,5,10,.2);ctx.restore();});
+      fi(d.col);el(22,0,12,7,0);fi(d.col2);el(22,4,12,4,0);
+      fi('#ddd');[14,18,22,26,30].forEach(tx=>tr(tx,1,tx+1,-4,tx+2,1));
+      fi('white');ci(26,-3,2.5);fi('#111');ci(26.5,-3,1.2);
+      break;}
+    case'para':{
+      const lA6=Math.sin(a.legT)*9,bob6=Math.sin(a.bobT)*2;
+      st(d.col,6);pa([[-14,2+bob6],[-24+s5(a.tailT),6],[-28,2+bob6]]);
+      [[-8,1],[8,-1],[-4,.5],[4,-.5]].forEach(([ox,p])=>{
+        ctx.save();ctx.translate(ox,9+bob6);ctx.rotate(lA6*p*Math.PI/180);
+        st(d.col2,5);pa([[0,0],[0,14]]);ctx.restore();
+      });
+      fi(d.col);el(0,bob6,16,10,0);fi(d.belly);el(0,4+bob6,9,6,0);
+      st(d.col,9);pa([[10,-3+bob6],[16,-14]]);fi(d.col);el(18,-17,8,6,.2);
+      fi('#8a4a20');tr(14,-18,12,-30,20,-20); // crest
+      fi('white');ci(22,-19,2);fi('#111');ci(22.5,-19,1);
+      st(d.col2,2);pa([[12,-15],[24,-14+jaw]]);
+      break;}
+    case'spino':{
+      const lA7=Math.sin(a.legT)*12,bob7=Math.sin(a.bobT)*2;
+      st(d.col,7);pa([[-10,3+bob7],[-24+s5(a.tailT),7],[-32,2+bob7]]);
+      [[-5,1],[5,-1]].forEach(([ox,p])=>{
+        ctx.save();ctx.translate(ox,10+bob7);ctx.rotate(lA7*p*Math.PI/180);
+        st(d.col2,5);pa([[0,0],[0,16]]);st(d.col2,3);pa([[0,16],[5,20]]);ctx.restore();
+      });
+      // sail
+      [-2,3,8,13].forEach((px,i)=>{
+        const ph=10+Math.sin(i*1.5)*4+Math.sin(a.bobT+i)*1.5;
+        fi(d.col);tr(px,-6+bob7,px-4,-6-ph+bob7,px+4,-6-ph+bob7);
+      });
+      fi(d.col);el(0,bob7,17,11,.1);fi(d.belly);el(0,4+bob7,9,6,0);
+      st(d.col,9);pa([[10,-4+bob7],[18,-18]]);fi(d.col);el(20,-22,10,6,.3);
+      fi('white');ci(25,-24,2.5);fi('#111');ci(25.5,-24,1.2);
+      st(d.col2,3);pa([[14,-18],[30,-17+jaw]]);
+      break;}
+  }
+}
+
+// ==================== DRAW VISITORS ====================
+const BICONS={gate:'🚪',shop:'🏪',rest:'🍔',medical:'🏥',ranger:'🏕️',heli:'🚁',tree:'🌴',rock:'🪨'};
+const BCOLS={gate:'#1e3a6a',shop:'#1a3a4a',rest:'#3a2a1a',medical:'#1a3a2a',ranger:'#2a3a1a',heli:'#2a2a3a',tree:'#1a3a1a',rock:'#3a3a2a'};
+const VCOLS=['#4ecdc4','#ff9f43','#a29bfe','#fd79a8','#55efc4','#ffeaa7','#74b9ff'];
+const VHAIR=['#3a2a1a','#1a0a00','#c8a050','#ff7a7a','#888','#d4d4d4'];
+function drawVisitor(v){
+  const{x:sx,y:sy}=w2s(v.x,v.y);
+  if(sx<-20||sy<-20||sx>W+20||sy>H+20)return;
+  ctx.save();
+  ctx.fillStyle='rgba(0,0,0,0.22)';ctx.beginPath();ctx.ellipse(sx,sy+12,5,2,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle=v.col;ctx.beginPath();ctx.ellipse(sx,sy+6,4,6,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#f5cba7';ctx.beginPath();ctx.arc(sx,sy,4.5,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle=v.hair;ctx.beginPath();ctx.arc(sx,sy-2,4.5,Math.PI,0);ctx.fill();
+  const ls=v.walking?Math.sin(v.walkT*.28)*9:0;
+  ctx.strokeStyle=v.col;ctx.lineWidth=2.5;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(sx,sy+12);ctx.lineTo(sx-3+ls,sy+18);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(sx,sy+12);ctx.lineTo(sx+3-ls,sy+18);ctx.stroke();
+  ctx.font='9px serif';ctx.textAlign='center';ctx.fillText(v.mood,sx,sy-8);
+  ctx.restore();
+}
+
+// ==================== MAIN DRAW ====================
+function draw(){
+  ctx.clearRect(0,0,W,H);
+
+  // Ocean background
+  ctx.fillStyle='#0a1e3a';
+  ctx.fillRect(0,0,W,H);
+
+  // Terrain — draw scaled
+  if(terrainCanvas){
+    const res=4; // terrain canvas is WORLD/res pixels
+    const tw=terrainCanvas.width, th=terrainCanvas.height;
+    // Source rect in terrain coords
+    const srcX=Math.max(0,-G.cam.x/(G.zoom*res));
+    const srcY=Math.max(0,-G.cam.y/(G.zoom*res));
+    const srcW=Math.min(tw-srcX, W/(G.zoom*res));
+    const srcH=Math.min(th-srcY, H/(G.zoom*res));
+    // Dest rect in screen coords
+    const dstX=Math.max(0,G.cam.x);
+    const dstY=Math.max(0,G.cam.y);
+    const dstW=srcW*res*G.zoom;
+    const dstH=srcH*res*G.zoom;
+    if(srcW>0&&srcH>0&&dstW>0&&dstH>0){
+      ctx.drawImage(terrainCanvas, srcX, srcY, srcW, srcH, dstX, dstY, dstW, dstH);
+    }
+  }
+
+  // All world-space objects: use ctx transform for zoom
+  ctx.save();
+  ctx.translate(G.cam.x, G.cam.y);
+  ctx.scale(G.zoom, G.zoom);
+
+  // World objects
+  worldObjects.forEach(o=>drawWorldObjLocal(o));
+  // Roads
+  G.roads.forEach(r=>drawRoadLocal(r));
+  // Enclosures
+  G.enclosures.forEach(e=>drawEnclosureLocal(e));
+  // Buildings
+  G.buildings.forEach(b=>drawBuildingLocal(b));
+
+  ctx.restore();
+
+  // Dinos & visitors at screen coords (already use w2s internally, draw without extra transform)
+  G.enclosures.forEach(enc=>enc.dinos&&enc.dinos.forEach(ag=>drawAgent(ag)));
+  G.visitors.forEach(v=>drawVisitor(v));
+
+  // Drawing previews
+  if(G.drawing&&G.drawPts.length>0){
+    const et=ENC_TYPES[G.encType];
+    ctx.save();
+    ctx.beginPath();
+    G.drawPts.forEach((p,i)=>{const{x,y}=w2s(p.x,p.y);i?ctx.lineTo(x,y):ctx.moveTo(x,y);});
+    ctx.strokeStyle=et.fence;ctx.lineWidth=3;ctx.setLineDash([8,6]);ctx.stroke();ctx.setLineDash([]);
+    G.drawPts.forEach(p=>{const{x,y}=w2s(p.x,p.y);fi(et.fence);ci(x,y,5);});
+    if(G.drawPts.length>2){
+      const{x:fx,y:fy}=w2s(G.drawPts[0].x,G.drawPts[0].y);
+      const{x:lx,y:ly}=w2s(G.drawPts[G.drawPts.length-1].x,G.drawPts[G.drawPts.length-1].y);
+      ctx.strokeStyle='rgba(0,212,255,0.35)';ctx.lineWidth=2;ctx.setLineDash([5,5]);
+      ctx.beginPath();ctx.moveTo(lx,ly);ctx.lineTo(fx,fy);ctx.stroke();ctx.setLineDash([]);
+    }
+    ctx.restore();
+  }
+  if(G.roadDrawing&&G.roadPts.length>0){
+    ctx.save();ctx.beginPath();
+    G.roadPts.forEach((p,i)=>{const{x,y}=w2s(p.x,p.y);i?ctx.lineTo(x,y):ctx.moveTo(x,y);});
+    ctx.strokeStyle='rgba(180,150,100,0.7)';ctx.lineWidth=Math.max(2,8*G.zoom);ctx.lineCap='round';ctx.setLineDash([10,8]);ctx.stroke();ctx.setLineDash([]);
+    ctx.restore();
+  }
+
+  // Minimap (always visible, bottom-left)
+  drawMinimap();
+
+  // Zoom level indicator
+  ctx.save();
+  ctx.font='bold 10px Nunito';ctx.fillStyle='rgba(255,255,255,0.45)';ctx.textAlign='left';
+  ctx.fillText(`${Math.round(G.zoom*100)}%`,10,H-10);
+  ctx.restore();
+}
+
+// Local draw helpers (called inside ctx transform, so no w2s needed — coords are world coords directly)
+function drawWorldObjLocal(obj){
+  const x=obj.x, y=obj.y;
+  ctx.save();ctx.translate(x,y);
+  if(obj.type==='tree'){
+    ctx.fillStyle='#4a2a0a';ctx.fillRect(-obj.sz*.25,-obj.sz*.1,obj.sz*.5,obj.sz*.9);
+    ctx.fillStyle='rgba(0,0,0,0.18)';ctx.beginPath();ctx.ellipse(0,obj.sz*.3,obj.sz*.7,obj.sz*.2,0,0,Math.PI*2);ctx.fill();
+    [[0,-.3],[-.2,-.55],[.2,-.5],[0,-.78]].forEach(([ox,oy])=>{
+      ctx.fillStyle=`hsl(${120+seededRand(Math.floor(x/10),Math.floor(y/10),12)*20},${50+seededRand(Math.floor(x/10),Math.floor(y/10),13)*20}%,${25+seededRand(Math.floor(x/10),Math.floor(y/10),14)*15}%)`;
+      ctx.beginPath();ctx.arc(ox*obj.sz,oy*obj.sz+obj.sz*.3,obj.sz*.55,0,Math.PI*2);ctx.fill();
+    });
+  } else {
+    ctx.fillStyle='rgba(0,0,0,0.2)';ctx.beginPath();ctx.ellipse(obj.sz*.15,obj.sz*.3,obj.sz*.85,obj.sz*.28,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=`hsl(${30+seededRand(Math.floor(x/10),0,99)*20},${10+seededRand(0,Math.floor(y/10),99)*15}%,${45+seededRand(Math.floor(x/10),Math.floor(y/10),99)*20}%)`;
+    ctx.beginPath();ctx.rotate(obj.r);ctx.ellipse(0,0,obj.sz,obj.sz*.65,.2,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,0.1)';ctx.beginPath();ctx.ellipse(-obj.sz*.2,-obj.sz*.2,obj.sz*.3,obj.sz*.15,-.3,0,Math.PI*2);ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawRoadLocal(road){
+  if(road.pts.length<2)return;
+  ctx.save();
+  ctx.beginPath();
+  road.pts.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));
+  ctx.strokeStyle='rgba(180,150,100,0.8)';ctx.lineWidth=10;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke();
+  ctx.strokeStyle='rgba(220,190,140,0.4)';ctx.lineWidth=3;ctx.setLineDash([12,10]);ctx.stroke();ctx.setLineDash([]);
+  ctx.restore();
+}
+
+function drawEnclosureLocal(enc){
+  if(enc.points.length<3)return;
+  const et=ENC_TYPES[enc.typeIdx||0];
+  ctx.save();
+  ctx.beginPath();
+  enc.points.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));
+  ctx.closePath();
+  ctx.fillStyle=et.col;ctx.fill();
+  // Interior texture
+  ctx.save();ctx.clip();
+  ctx.fillStyle='rgba(255,255,255,0.04)';
+  const b=enc.bounds;
+  for(let tx=b.x0;tx<b.x1;tx+=32)for(let ty=b.y0;ty<b.y1;ty+=24){
+    if(ptInPoly(tx,ty,enc.points)){
+      ctx.beginPath();ctx.arc(tx+Math.sin((tx+ty)*0.1)*6,ty+Math.cos((tx-ty)*0.1)*6,4,0,Math.PI*2);ctx.fill();
+    }
+  }
+  ctx.restore();
+  // Fence
+  ctx.beginPath();
+  enc.points.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));
+  ctx.closePath();
+  ctx.strokeStyle=et.fence;ctx.lineWidth=4;ctx.lineJoin='round';ctx.stroke();
+  enc.points.forEach(p=>{
+    ctx.fillStyle='#8b6914';ctx.fillRect(p.x-4,p.y-4,8,8);
+    ctx.fillStyle='#c8a030';ctx.fillRect(p.x-2,p.y-2,4,4);
+  });
+  ctx.restore();
+  // Label — scale font inversely so it's always readable
+  const labelScale=1/G.zoom;
+  const{cx,cy}=enc.bounds;
+  ctx.save();
+  ctx.translate(cx,cy);ctx.scale(labelScale,labelScale);
+  ctx.font='bold 12px Nunito';ctx.textAlign='center';ctx.textBaseline='middle';
+  if(enc.dinos&&enc.dinos.length>0){
+    const names=[...new Set(enc.dinos.map(ag=>DINOS.find(d=>d.id===ag.dinoId)?.n))];
+    ctx.fillStyle='rgba(255,255,255,0.65)';
+    ctx.fillText(`${names.join(' + ')} (${enc.dinos.length})`,0,-18);
+  } else {
+    ctx.fillStyle='rgba(255,255,255,0.3)';ctx.fillText('Leer — tippe zum Befüllen',0,0);
+  }
+  ctx.restore();
+}
+
+function drawBuildingLocal(b){
+  const R=22;
+  ctx.save();ctx.translate(b.x,b.y);
+  // Scale building inversely at low zoom so icons stay legible
+  const s=Math.max(1,1/G.zoom);
+  ctx.scale(s,s);
+  ctx.fillStyle='rgba(0,0,0,0.25)';ctx.beginPath();ctx.ellipse(2,4,R,R*.4,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle=BCOLS[b.type]||'#1a2a3a';ctx.beginPath();ctx.arc(0,0,R,0,Math.PI*2);ctx.fill();
+  if(['gate','medical','ranger'].includes(b.type)){
+    ctx.strokeStyle='rgba(0,212,255,0.5)';ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,0,R+2,0,Math.PI*2);ctx.stroke();
+  }
+  ctx.font=`${R*0.9}px serif`;ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText(BICONS[b.type]||'?',0,1);
+  ctx.font='bold 9px Nunito';ctx.fillStyle='rgba(255,255,255,0.75)';
+  const labels={gate:'EINGANG',shop:'SHOP',rest:'ESSEN',medical:'SANITÄR',ranger:'RANGER',heli:'HELIPAD'};
+  if(labels[b.type])ctx.fillText(labels[b.type],0,R+10);
+  ctx.restore();
+}
+
+// ==================== MINIMAP ====================
+function drawMinimap(){
+  const MW=160, MH=120;
+  const MX=10, MY=H-MH-10;
+  const scale=MW/WORLD;
+  ctx.save();
+  // Background
+  ctx.fillStyle='rgba(6,13,24,0.88)';
+  ctx.strokeStyle='rgba(77,142,255,0.4)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.roundRect(MX-2,MY-2,MW+4,MH+4,6);ctx.fill();ctx.stroke();
+  // Terrain thumbnail (just redraw terrain canvas scaled down)
+  if(terrainCanvas){
+    ctx.save();
+    ctx.beginPath();ctx.roundRect(MX,MY,MW,MH,4);ctx.clip();
+    ctx.drawImage(terrainCanvas,0,0,terrainCanvas.width,terrainCanvas.height,MX,MY,MW,MH);
+    ctx.restore();
+  }
+  // Enclosures on minimap
+  G.enclosures.forEach(enc=>{
+    const et=ENC_TYPES[enc.typeIdx||0];
+    ctx.beginPath();
+    enc.points.forEach((p,i)=>{
+      const mx=MX+p.x*scale, my=MY+p.y*scale;
+      i?ctx.lineTo(mx,my):ctx.moveTo(mx,my);
+    });
+    ctx.closePath();
+    ctx.fillStyle=et.col;ctx.fill();
+    ctx.strokeStyle=et.fence;ctx.lineWidth=1.5;ctx.stroke();
+  });
+  // Roads
+  G.roads.forEach(r=>{
+    if(r.pts.length<2)return;
+    ctx.beginPath();
+    r.pts.forEach((p,i)=>{const mx=MX+p.x*scale,my=MY+p.y*scale;i?ctx.lineTo(mx,my):ctx.moveTo(mx,my);});
+    ctx.strokeStyle='rgba(200,170,120,0.8)';ctx.lineWidth=1.5;ctx.lineCap='round';ctx.stroke();
+  });
+  // Buildings
+  G.buildings.forEach(b=>{
+    const mx=MX+b.x*scale, my=MY+b.y*scale;
+    ctx.fillStyle='rgba(0,212,255,0.9)';
+    ctx.beginPath();ctx.arc(mx,my,2.5,0,Math.PI*2);ctx.fill();
+  });
+  // Viewport rect
+  const vx=MX+(-G.cam.x/G.zoom)*scale;
+  const vy=MY+(-G.cam.y/G.zoom)*scale;
+  const vw=(W/G.zoom)*scale;
+  const vh=(H/G.zoom)*scale;
+  ctx.strokeStyle='rgba(255,255,255,0.7)';ctx.lineWidth=1.5;ctx.setLineDash([3,2]);
+  ctx.strokeRect(vx,vy,vw,vh);ctx.setLineDash([]);
+  // Label
+  ctx.font='bold 8px Nunito';ctx.fillStyle='rgba(255,255,255,0.5)';ctx.textAlign='left';
+  ctx.fillText('KARTE',MX+2,MY-4);
+  ctx.restore();
+}
+// Click on minimap to jump camera
+const MINIMAP_X=10, MINIMAP_Y_OFFSET=130; // from bottom
+cvs.addEventListener('click',e=>{
+  const p=getPos(e);
+  const MY=H-MINIMAP_Y_OFFSET;
+  const MW=160,MH=120,MX=10;
+  if(p.x>=MX&&p.x<=MX+MW&&p.y>=MY&&p.y<=MY+MH){
+    const scale=MW/WORLD;
+    const wx=(p.x-MX)/scale, wy=(p.y-MY)/scale;
+    G.cam.x=W/2-wx*G.zoom;G.cam.y=H/2-wy*G.zoom;clampCam();
+  }
+});
+
+// ==================== GAME LOOP ====================
+const TICK_MS=[null,2200,800,280];let lastT=0;
+function loop(ts){
+  requestAnimationFrame(loop);
+  G.enclosures.forEach(e=>e.dinos&&e.dinos.forEach(ag=>updateAgent(ag,e)));
+  updateVisitors();
+  if(ts-lastT>TICK_MS[G.speed]){lastT=ts;tick();}
+  draw();
+}
+function tick(){
+  G.tick++;
+  if(G.tick%20===0){G.day++;dayIncome();}
+  if(G.tick%5===0)spawnVisitor();
+  // Research progress
+  if(G.activeResearch){
+    G.researchTimer--;
+    if(G.researchTimer<=0){
+      const r=G.research.find(x=>x.id===G.activeResearch);
+      if(r){r.done=true;notify(`🔬 ${r.n} abgeschlossen!`);showAlert('Forschung abgeschlossen!',`${r.n}: ${r.desc}`);}
+      G.activeResearch=null;
+      if(curTab==='research')renderTab();
+    }
+    document.getElementById('hr').textContent=G.activeResearch?
+      Math.round((1-G.researchTimer/(G.research.find(r=>r.id===G.activeResearch)?.time*20||1))*100)+'%':
+      (G.research.filter(r=>r.done).length*10)+'%';
+  }
+  calcSat();
+  if(G.tick%8===0)updateHUD();
+}
+function dayIncome(){
+  const hasPremium=G.research.find(r=>r.id==='research_income')?.done;
+  const bonus=hasPremium?1.5:1;
+  G.enclosures.forEach(enc=>{
+    if(!enc.dinos||!enc.dinos.length)return;
+    enc.dinos.forEach(ag=>{
+      const d=DINOS.find(x=>x.id===ag.dinoId);
+      if(d)G.money+=d.inc*bonus;
+    });
+  });
+  G.buildings.filter(b=>b.type==='shop').forEach(()=>G.money+=Math.round(25*bonus));
+  G.buildings.filter(b=>b.type==='rest').forEach(()=>G.money+=Math.round(35*bonus));
+  G.buildings.filter(b=>b.type==='heli').forEach(()=>G.money+=60);
+}
+function calcSat(){
+  let s=30;
+  const allDinos=G.enclosures.reduce((a,e)=>a+(e.dinos?e.dinos.length:0),0);
+  s+=Math.min(allDinos*7,50);
+  const avgHap=allDinos>0?G.enclosures.reduce((a,e)=>a+(e.dinos||[]).reduce((s2,ag)=>s2+ag.happiness,0),0)/allDinos:3;
+  s+=(avgHap-3)*8;
+  if(G.buildings.find(b=>b.type==='shop'))s+=8;
+  if(G.buildings.find(b=>b.type==='rest'))s+=10;
+  if(G.buildings.find(b=>b.type==='medical'))s+=7;
+  if(G.buildings.find(b=>b.type==='ranger'))s+=8;
+  const hasCapacity=G.research.find(r=>r.id==='research_capacity')?.done;
+  G.maxVisitors=hasCapacity?25:12;
+  G.sat=Math.min(100,Math.max(0,Math.round(s)));
+  G.rating=Math.ceil(G.sat/20);
+  document.getElementById('hs').textContent='⭐'.repeat(Math.min(5,G.rating));
+}
+function updateHUD(){
+  document.getElementById('hm').textContent=G.money.toLocaleString('de-CH');
+  document.getElementById('hv').textContent=G.visitors.length;
+  document.getElementById('hd').textContent=G.day;
+}
+
+// ==================== VISITORS ====================
+function spawnVisitor(){
+  const gate=G.buildings.find(b=>b.type==='gate');
+  const encs=G.enclosures.filter(e=>e.dinos&&e.dinos.length>0);
+  if(!gate||!encs.length)return;
+  if(G.visitors.length>=G.maxVisitors)return;
+  if(Math.random()>0.35)return;
+  const target=encs[Math.floor(Math.random()*encs.length)];
+  G.visitors.push({
+    x:gate.x,y:gate.y,
+    col:VCOLS[Math.floor(Math.random()*VCOLS.length)],
+    hair:VHAIR[Math.floor(Math.random()*VHAIR.length)],
+    tx:target.bounds.cx,ty:target.bounds.cy,target,
+    mood:'😊',happy:88+Math.random()*12,
+    spd:.5+Math.random()*.6,state:'walk',waitT:0,walkT:0,walking:true,
+  });
+}
+function updateVisitors(){
+  const shops=G.buildings.filter(b=>['shop','rest'].includes(b.type));
+  G.visitors.forEach((v,i)=>{
+    v.walkT++;
+    if(v.state==='leave'){v.x-=v.spd*.7;v.y-=v.spd*.3;if(v.x<G.cam.x-200)G.visitors.splice(i,1);return;}
+    if(v.state==='wait'){v.waitT--;
+      if(v.waitT<=0){
+        if(shops.length&&Math.random()<.45){const s=shops[Math.floor(Math.random()*shops.length)];v.tx=s.x;v.ty=s.y;v.state='walk';}
+        else v.state='leave';
+      }v.walking=false;return;}
+    const dx=v.tx-v.x,dy=v.ty-v.y,dist=Math.sqrt(dx*dx+dy*dy);
+    v.walking=dist>6;
+    if(dist<7){v.state='wait';v.waitT=50+Math.floor(Math.random()*100);v.mood='🤩';
+      v.happy=Math.min(100,v.happy+6);G.money+=8;}
+    else{v.x+=dx/dist*v.spd+(Math.random()-.5)*.35;v.y+=dy/dist*v.spd+(Math.random()-.5)*.35;}
+    v.happy-=.003;
+    if(v.happy<40){v.mood='😞';v.state='leave';}
+    else if(v.happy<65)v.mood='😐';
+    else if(v.happy<82)v.mood='😊';
+    else v.mood='🤩';
+  });
+}
+
+// ==================== INPUT ====================
+function getPos(e){const r=cvs.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top}}
+let pDown=0;
+
+cvs.addEventListener('mousedown',e=>{
+  const p=getPos(e);pDown=Date.now();
+  G.drag={on:false,sx:p.x,sy:p.y,cx:G.cam.x,cy:G.cam.y};
+  if(G.tool==='enc'){G.drawing=true;const w=s2w(p.x,p.y);G.drawPts=[{x:w.x,y:w.y}];G.drag.on=true;}
+  if(G.tool==='road'){G.roadDrawing=true;const w=s2w(p.x,p.y);G.roadPts=[{x:w.x,y:w.y}];G.drag.on=true;}
+});
+cvs.addEventListener('mousemove',e=>{
+  const p=getPos(e);
+  const dx=p.x-G.drag.sx,dy=p.y-G.drag.sy;
+  if(G.tool==='pan'&&(Math.abs(dx)>3||Math.abs(dy)>3)){
+    G.drag.on=true;G.cam.x=G.drag.cx+dx;G.cam.y=G.drag.cy+dy;clampCam();
+  }
+  if(G.tool==='enc'&&G.drawing&&G.drag.on){
+    const last=G.drawPts[G.drawPts.length-1];const w=s2w(p.x,p.y);
+    if(!last||Math.hypot(w.x-last.x,w.y-last.y)>22)G.drawPts.push({x:w.x,y:w.y});
+  }
+  if(G.tool==='road'&&G.roadDrawing&&G.drag.on){
+    const last=G.roadPts[G.roadPts.length-1];const w=s2w(p.x,p.y);
+    if(!last||Math.hypot(w.x-last.x,w.y-last.y)>20)G.roadPts.push({x:w.x,y:w.y});
+  }
+});
+cvs.addEventListener('mouseup',e=>{
+  if(G.tool==='enc'&&G.drawing){
+    if(G.drawPts.length>=4)finishEnc();else{G.drawing=false;G.drawPts=[];}
+    G.drag.on=false;return;
+  }
+  if(G.tool==='road'&&G.roadDrawing){
+    if(G.roadPts.length>=2){G.roads.push({id:Date.now(),pts:[...G.roadPts]});notify('Strasse gebaut!');}
+    G.roadDrawing=false;G.roadPts=[];G.drag.on=false;return;
+  }
+  if(G.drag.on&&G.tool==='pan'){G.drag.on=false;return;}
+  const p=getPos(e);if(Date.now()-pDown>500)return;
+  handleTap(p.x,p.y);G.drag.on=false;
+});
+cvs.addEventListener('touchstart',e=>{
+  e.preventDefault();const t=e.touches[0];const p=getPos(t);pDown=Date.now();
+  G.drag={on:false,sx:p.x,sy:p.y,cx:G.cam.x,cy:G.cam.y};
+  if(G.tool==='enc'){G.drawing=true;const w=s2w(p.x,p.y);G.drawPts=[{x:w.x,y:w.y}];G.drag.on=true;}
+  if(G.tool==='road'){G.roadDrawing=true;const w=s2w(p.x,p.y);G.roadPts=[{x:w.x,y:w.y}];G.drag.on=true;}
+},{passive:false});
+cvs.addEventListener('touchmove',e=>{
+  e.preventDefault();const t=e.touches[0];const p=getPos(t);
+  const dx=p.x-G.drag.sx,dy=p.y-G.drag.sy;
+  if(G.tool==='pan'){G.drag.on=true;G.cam.x=G.drag.cx+dx;G.cam.y=G.drag.cy+dy;clampCam();}
+  if(G.tool==='enc'&&G.drawing){G.drag.on=true;const last=G.drawPts[G.drawPts.length-1];const w=s2w(p.x,p.y);if(!last||Math.hypot(w.x-last.x,w.y-last.y)>18)G.drawPts.push({x:w.x,y:w.y});}
+  if(G.tool==='road'&&G.roadDrawing){G.drag.on=true;const last=G.roadPts[G.roadPts.length-1];const w=s2w(p.x,p.y);if(!last||Math.hypot(w.x-last.x,w.y-last.y)>18)G.roadPts.push({x:w.x,y:w.y});}
+},{passive:false});
+cvs.addEventListener('touchend',e=>{
+  e.preventDefault();
+  if(G.tool==='enc'&&G.drawing){if(G.drawPts.length>=4)finishEnc();else{G.drawing=false;G.drawPts=[];}G.drag.on=false;return;}
+  if(G.tool==='road'&&G.roadDrawing){if(G.roadPts.length>=2){G.roads.push({id:Date.now(),pts:[...G.roadPts]});notify('Strasse gebaut!');}G.roadDrawing=false;G.roadPts=[];G.drag.on=false;return;}
+  if(G.drag.on&&G.tool==='pan'){G.drag.on=false;return;}
+  const t=e.changedTouches[0];if(Date.now()-pDown>450)return;
+  handleTap(getPos(t).x,getPos(t).y);G.drag.on=false;
+},{passive:false});
+cvs.addEventListener('wheel',e=>{
+  e.preventDefault();
+  if(e.ctrlKey||Math.abs(e.deltaY)>Math.abs(e.deltaX)){
+    // Zoom
+    const factor=e.deltaY<0?1.1:0.9;
+    const p=getPos(e);
+    zoomAt(factor,p.x,p.y);
+  } else {
+    // Pan
+    G.cam.x-=e.deltaX*.8;G.cam.y-=e.deltaY*.8;clampCam();
+  }
+},{passive:false});
+
+// Pinch-to-zoom
+let lastPinchDist=0;
+cvs.addEventListener('touchstart',e2=>{
+  if(e2.touches.length===2){
+    const dx=e2.touches[0].clientX-e2.touches[1].clientX;
+    const dy=e2.touches[0].clientY-e2.touches[1].clientY;
+    lastPinchDist=Math.sqrt(dx*dx+dy*dy);
+  }
+},{passive:true,capture:true});
+cvs.addEventListener('touchmove',e2=>{
+  if(e2.touches.length===2){
+    e2.preventDefault();
+    const dx=e2.touches[0].clientX-e2.touches[1].clientX;
+    const dy=e2.touches[0].clientY-e2.touches[1].clientY;
+    const dist=Math.sqrt(dx*dx+dy*dy);
+    if(lastPinchDist>0){
+      const factor=dist/lastPinchDist;
+      const r=cvs.getBoundingClientRect();
+      const px=(e2.touches[0].clientX+e2.touches[1].clientX)/2-r.left;
+      const py=(e2.touches[0].clientY+e2.touches[1].clientY)/2-r.top;
+      zoomAt(factor,px,py);
+    }
+    lastPinchDist=dist;
+  }
+},{passive:false,capture:true});
+
+function handleTap(sx,sy){
+  const w=s2w(sx,sy);
+  if(G.tool==='del'){
+    const ei=G.enclosures.findIndex(e=>ptInPoly(w.x,w.y,e.points));
+    if(ei>=0){G.enclosures.splice(ei,1);notify('Gehege entfernt');return;}
+    const bi=G.buildings.findIndex(b=>Math.hypot(b.x-w.x,b.y-w.y)<28);
+    if(bi>=0){G.buildings.splice(bi,1);notify('Gebäude entfernt');return;}
+    const ri=G.roads.findIndex(r=>r.pts.some(p=>Math.hypot(p.x-w.x,p.y-w.y)<20));
+    if(ri>=0){G.roads.splice(ri,1);notify('Strasse entfernt');return;}
+    return;
+  }
+  if(G.tool==='place'&&G.placeItem){
+    placeBuilding(w.x,w.y,G.placeItem);return;
+  }
+  if(G.tool==='enc'&&!G.drag.on){
+    if(!G.drawing){G.drawing=true;G.drawPts=[{x:w.x,y:w.y}];}
+    else{
+      const fp=G.drawPts[0];
+      if(Math.hypot(w.x-fp.x,w.y-fp.y)<35&&G.drawPts.length>3)finishEnc();
+      else G.drawPts.push({x:w.x,y:w.y});
+    }
+    return;
+  }
+  // Click on enclosure
+  const enc=G.enclosures.find(e=>ptInPoly(w.x,w.y,e.points));
+  if(enc){openDinoPicker(enc);return;}
+  // Click on building
+  const bld=G.buildings.find(b=>Math.hypot(b.x-w.x,b.y-w.y)<28);
+  if(bld){openBuildingDetail(bld);return;}
+  // Click on dino agent
+  for(const enc2 of G.enclosures){
+    if(!enc2.dinos)continue;
+    for(const ag of enc2.dinos){
+      if(Math.hypot(ag.x-w.x,ag.y-w.y)<20){openAgentDetail(enc2,ag);return;}
+    }
+  }
+}
+
+// ==================== ENC DRAWING ====================
+function finishEnc(){
+  if(G.drawPts.length<3){notify('Mehr Punkte nötig!');G.drawing=false;G.drawPts=[];return;}
+  const area=polyArea(G.drawPts);
+  if(area<3000){notify('Gehege zu klein! Grösser zeichnen.');G.drawing=false;G.drawPts=[];return;}
+  const cost=Math.max(300,Math.floor(area/800)*12);
+  if(G.money<cost){notify(`Zu wenig Geld! Kostet ${cost}.`);G.drawing=false;G.drawPts=[];return;}
+  G.money-=cost;
+  const bounds=polyBounds(G.drawPts);
+  const enc={id:Date.now(),points:[...G.drawPts],typeIdx:G.encType,bounds,dinos:[]};
+  G.enclosures.push(enc);
+  G.drawing=false;G.drawPts=[];
+  notify(`Gehege gebaut! (-${cost}) Tippe rein um Dinos einzusetzen.`);
+  updateHUD();renderTab();
+  setTimeout(()=>openDinoPicker(enc),350);
+}
+function cancelEnc(){G.drawing=false;G.drawPts=[];}
+
+// ==================== BUILDING PLACEMENT ====================
+function setPlaceItem(id){
+  G.placeItem=id;setTool('place');
+  document.getElementById('place-picker').style.display='none';
+  notify('Tippe auf die Insel um das Gebäude zu platzieren!');
+}
+function placeBuilding(wx,wy,type){
+  const bd=BUILDINGS.find(b=>b.id===type);if(!bd)return;
+  if(G.money<bd.cost){notify('Nicht genug Geld!');return;}
+  // Check on island
+  const cx=WORLD/2,cy=WORLD/2;
+  const dist=Math.hypot(wx-cx,wy-cy);
+  if(dist>ISLAND_R*0.9){notify('Ausserhalb der Insel!');return;}
+  G.money-=bd.cost;
+  G.buildings.push({id:Date.now(),type,x:wx,y:wy});
+  notify(`${bd.em} ${bd.n} gebaut!`);
+  G.placeItem=null;setTool('pan');
+  updateHUD();renderTab();
+}
+function openBuildingDetail(b){
+  const bd=BUILDINGS.find(x=>x.id===b.type);
+  showAlert(bd?.em+' '+bd?.n,`Klicke 🗑️ Löschen und dann auf das Gebäude um es zu entfernen.`);
+}
+
+// ==================== DINO PICKER ====================
+let pickerEnc=null;
+function openDinoPicker(enc){
+  pickerEnc=enc;
+  document.getElementById('dp-info').textContent=
+    `${enc.dinos.length} Tier${enc.dinos.length===1?'':'e'} im Gehege. Mehrere der gleichen Sorte möglich!`;
+  document.getElementById('dp-grid').innerHTML=DINOS.map(d=>{
+    const unlocked=isUnlocked(d);
+    const cnt=enc.dinos.filter(a=>a.dinoId===d.id).length;
+    const canAff=G.money>=d.cost;
+    const bc={carnivore:'bc',herbivore:'bh',flying:'bf',water:'bw'}[d.type];
+    return`<div class="dpitem ${(unlocked&&canAff)?'':'locked'}" onclick="${unlocked?`addDino('${d.id}')`:''}" style="position:relative">
+      <div class="dp-em">${d.em}</div>
+      <div style="font-weight:800;font-size:.78rem;color:white">${d.n}${cnt>0?` <span style="color:var(--accent)">${cnt}x</span>`:''}</div>
+      <span class="badge ${bc}" style="font-size:.54rem">${d.diet}</span>
+      <div style="font-size:.62rem;color:var(--amber);font-weight:800;margin-top:3px">💰 ${d.cost}</div>
+      ${!unlocked?'<div style="position:absolute;top:4px;right:4px;font-size:.6rem">🔒</div>':''}
+    </div>`;
+  }).join('');
+  document.getElementById('dino-picker').classList.add('open');
+}
+function addDino(dinoId){
+  if(!pickerEnc)return;
+  const d=DINOS.find(x=>x.id===dinoId);
+  if(G.money<d.cost){notify('Nicht genug Geld!');return;}
+  G.money-=d.cost;
+  pickerEnc.dinos.push(initAgent(pickerEnc,dinoId));
+  notify(`${d.em} ${d.n} eingezogen! ${pickerEnc.dinos.length}x im Gehege.`);
+  updateHUD();renderTab();
+  openDinoPicker(pickerEnc);
+}
+
+// ==================== AGENT DETAIL ====================
+function openAgentDetail(enc,ag){
+  const d=DINOS.find(x=>x.id===ag.dinoId);
+  const h=ag.happiness||5,hcol=h>3?'#2ecc71':h>1?'#f39c12':'#e74c3c';
+  const bc={carnivore:'bc',herbivore:'bh',flying:'bf',water:'bw'}[d.type];
+  const tl={carnivore:'Fleischfresser',herbivore:'Pflanzenfresser',flying:'Flugsaurier',water:'Wasserreptil'}[d.type];
+  document.getElementById('dc').innerHTML=`
+    <div class="mh"></div>
+    <div style="font-size:3.2rem;text-align:center">${d.em}</div>
+    <div class="di-name">${d.n}</div>
+    <div style="text-align:center;color:rgba(255,255,255,.35);font-style:italic;font-size:.74rem;margin-bottom:.4rem">${d.lat}</div>
+    <div style="text-align:center;margin-bottom:.5rem"><span class="badge ${bc}">${tl}</span></div>
+    <div style="text-align:center;margin-bottom:.55rem">
+      <span style="font-size:.72rem;color:rgba(255,255,255,.38)">Glück: </span>
+      <span style="color:${hcol};font-weight:800">${'❤️'.repeat(Math.round(h))}${'🖤'.repeat(5-Math.round(h))}</span>
+    </div>
+    <div class="sgrid">
+      <div class="sbox"><div class="sv2">${d.era}</div><div class="sk2">Zeitalter</div></div>
+      <div class="sbox"><div class="sv2">${d.len}</div><div class="sk2">Länge</div></div>
+      <div class="sbox"><div class="sv2">${d.wt}</div><div class="sk2">Gewicht</div></div>
+      <div class="sbox"><div class="sv2">${'⭐'.repeat(d.att)}</div><div class="sk2">Attraktion</div></div>
+    </div>
+    <div style="font-size:.66rem;font-weight:800;color:rgba(255,255,255,.28);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">🔬 Wissenschaft</div>
+    <div class="fp">${d.fact}</div>
+    <div style="font-size:.66rem;font-weight:800;color:rgba(255,255,255,.28);text-transform:uppercase;letter-spacing:.5px;margin:.45rem 0 4px">🦕 Für Kinder</div>
+    <div class="fk">${d.kid}</div>
+    <button class="abtn af" onclick="feedAg_inner(${enc.id},'${ag.dinoId}')">🍖 Füttern (+Glück)</button>
+    <div style="text-align:center">
+      <button style="padding:5px 12px;background:rgba(231,76,60,.13);border:1px solid rgba(231,76,60,.28);border-radius:9px;color:#ff9999;font-weight:800;font-size:.7rem;cursor:pointer;font-family:'Nunito',sans-serif;margin-top:6px"
+        onclick="releaseAg(${enc.id},'${ag.dinoId}')">💸 Entlassen (+${Math.floor(d.cost*.5)})</button>
+    </div>
+    <button class="mclose" onclick="document.getElementById('dm').classList.remove('open')">✕ Schließen</button>
+  `;
+  document.getElementById('dm').classList.add('open');
+  document.getElementById('dm').onclick=e=>{if(e.target===document.getElementById('dm'))document.getElementById('dm').classList.remove('open');};
+}
+function feedAg_inner(encId,dinoId){
+  const enc=G.enclosures.find(e=>e.id===encId);if(!enc)return;
+  const ag=enc.dinos.find(a=>a.dinoId===dinoId);if(!ag)return;
+  ag.happiness=Math.min(5,ag.happiness+2);ag.fedAt=Date.now();
+  const d=DINOS.find(x=>x.id===dinoId);notify(`${d.em} satt und glücklich! ❤️`);
+  document.getElementById('dm').classList.remove('open');renderTab();
+}
+function releaseAg(encId,dinoId){
+  const enc=G.enclosures.find(e=>e.id===encId);if(!enc)return;
+  const idx=enc.dinos.findIndex(a=>a.dinoId===dinoId);if(idx<0)return;
+  const d=DINOS.find(x=>x.id===dinoId);
+  G.money+=Math.floor(d.cost*.5);enc.dinos.splice(idx,1);
+  document.getElementById('dm').classList.remove('open');
+  notify(`${d.em} entlassen. +${Math.floor(d.cost*.5)}`);updateHUD();renderTab();
+}
+
+// ==================== TOOL ====================
+function setTool(t){
+  G.tool=t;
+  document.querySelectorAll('.t').forEach(b=>b.classList.remove('on'));
+  const el=document.getElementById('t-'+t);if(el)el.classList.add('on');
+  const epal=document.getElementById('epal');
+  if(t==='enc')epal.style.display='block';
+  else{epal.style.display='none';G.drawing=false;G.drawPts=[];}
+  if(t==='road'){G.roadDrawing=false;G.roadPts=[];}
+  cvs.style.cursor=t==='pan'?'grab':t==='del'?'not-allowed':t==='place'?'cell':'crosshair';
+}
+function setSpd(s){G.speed=s;[1,2,3].forEach(i=>document.getElementById('s'+i).classList.toggle('on',i===s));}
+
+// ==================== SIDEBAR ====================
+let curTab='ops';
+function goTab(t){
+  curTab=t;
+  document.querySelectorAll('.stab').forEach((b,i)=>b.classList.toggle('on',['ops','research','dinos'][i]===t));
+  renderTab();
+}
+function mobTab(t){
+  const sb=document.getElementById('sb');
+  if(sb.classList.contains('mopen')&&curTab===t){sb.classList.remove('mopen');return;}
+  sb.classList.add('mopen');
+  document.querySelectorAll('.btab').forEach((b,i)=>b.classList.toggle('on',['ops','research','dinos'][i]===t));
+  goTab(t);
+}
+cvs.addEventListener('touchstart',()=>document.getElementById('sb').classList.remove('mopen'),{passive:true});
+
+function renderTab(){
+  if(curTab==='ops')renderOps();
+  else if(curTab==='research')renderResearch();
+  else renderDinosTab();
+}
+
+function renderOps(){
+  const allDinos=G.enclosures.reduce((a,e)=>a+(e.dinos?e.dinos.length:0),0);
+  const dinoInc=G.enclosures.reduce((a,e)=>a+(e.dinos||[]).reduce((s,ag)=>s+(DINOS.find(d=>d.id===ag.dinoId)?.inc||0),0),0);
+  const shopInc=G.buildings.filter(b=>b.type==='shop').length*25+G.buildings.filter(b=>b.type==='rest').length*35+G.buildings.filter(b=>b.type==='heli').length*60;
+  const upkeep=G.enclosures.reduce((a,e)=>a+(e.dinos||[]).reduce((s,ag)=>s+(DINOS.find(d=>d.id===ag.dinoId)?.up||0),0),0);
+  document.getElementById('sc').innerHTML=`
+    <div class="bl">Park-Status</div>
+    <div class="srow"><span class="sk">💰 Budget</span><span class="sv">${G.money.toLocaleString('de-CH')}</span></div>
+    <div class="srow"><span class="sk">📈 Einnahmen/Tag</span><span class="sv" style="color:#2ecc71">+${dinoInc+shopInc}</span></div>
+    <div class="srow"><span class="sk">📉 Kosten/Tag</span><span class="sv" style="color:#e74c3c">-${upkeep}</span></div>
+    <div class="srow"><span class="sk">🦕 Tiere</span><span class="sv">${allDinos}</span></div>
+    <div class="srow"><span class="sk">🏗️ Gehege</span><span class="sv">${G.enclosures.length}</span></div>
+    <div class="srow"><span class="sk">👥 Besucher</span><span class="sv">${G.visitors.length} / ${G.maxVisitors}</span></div>
+    <div class="srow"><span class="sk">😊 Zufriedenheit</span><span class="sv">${G.sat}%</span></div>
+    <div class="srow"><span class="sk">⭐ Bewertung</span><span class="sv">${'⭐'.repeat(Math.min(5,G.rating))}</span></div>
+    <div class="srow"><span class="sk">📅 Tag</span><span class="sv">${G.day}</span></div>
+    <div class="bl" style="margin-top:8px">Gebäude</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">${BUILDINGS.map(b=>`
+      <div style="background:rgba(45,107,228,.09);border:1.5px solid rgba(77,142,255,.14);border-radius:9px;padding:6px;text-align:center;cursor:pointer;transition:all .14s"
+        onclick="setPlaceItem('${b.id}');document.getElementById('place-picker').style.display='none'"
+        onmouseover="this.style.background='rgba(45,107,228,.22)'" onmouseout="this.style.background='rgba(45,107,228,.09)'">
+        <div style="font-size:1.3rem">${b.em}</div>
+        <div style="font-size:.62rem;font-weight:800;color:white">${b.n}</div>
+        <div style="font-size:.56rem;color:var(--amber)">💰 ${b.cost}</div>
+      </div>`).join('')}</div>
+    <div class="tip">${getTips()}</div>
+  `;
+}
+
+function getTips(){
+  const tips=[];
+  if(!G.buildings.find(b=>b.type==='gate'))tips.push('• Setze einen <b>Eingang</b> auf der Insel!');
+  if(!G.enclosures.length)tips.push('• Zeichne dein erstes Gehege!');
+  if(G.enclosures.length&&!G.enclosures.find(e=>e.dinos&&e.dinos.length))tips.push('• Tippe auf ein Gehege und setze Dinos ein!');
+  if(!G.research.find(r=>r.done))tips.push('• Starte Forschung um neue Dinos freizuschalten!');
+  if(tips.length===0)tips.push('Bau weiter aus! Mehr Dinos = mehr Einnahmen! 🦕');
+  return tips.join('<br>');
+}
+
+function renderResearch(){
+  document.getElementById('sc').innerHTML=`
+    <div class="bl">Aktive Forschung</div>
+    <div style="margin-bottom:8px;font-size:.72rem;color:var(--text2)">
+      ${G.activeResearch?`Läuft: <b style="color:var(--accent)">${G.research.find(r=>r.id===G.activeResearch)?.n}</b>`:'Keine aktive Forschung'}
+    </div>
+    <div class="bl">Projekte</div>
+    ${G.research.map(r=>`
+      <div class="ritem ${r.done?'done':''} ${(G.activeResearch&&G.activeResearch!==r.id&&!r.done)?'locked':''}"
+        onclick="${(!r.done&&!G.activeResearch)?`startResearch('${r.id}')`:''}" >
+        <div class="ri-top">
+          <div class="ri-em">${r.em}</div>
+          <div>
+            <div class="ri-n">${r.n} ${r.done?'✓':''}</div>
+            <div class="ri-c">${r.done?'Abgeschlossen':'💰 '+r.cost+' · '+r.time+' Tage'}</div>
+          </div>
+        </div>
+        <div class="ri-desc">${r.desc}</div>
+      </div>`).join('')}
+  `;
+}
+function startResearch(id){
+  const r=G.research.find(x=>x.id===id);if(!r||r.done)return;
+  if(G.money<r.cost){notify('Nicht genug Budget!');return;}
+  if(G.activeResearch){notify('Bereits eine Forschung aktiv!');return;}
+  G.money-=r.cost;
+  G.activeResearch=id;
+  G.researchTimer=r.time*20;
+  notify(`🔬 ${r.n} gestartet!`);
+  updateHUD();renderTab();
+}
+
+function renderDinosTab(){
+  let html='';
+  G.enclosures.forEach((enc,ei)=>{
+    if(!enc.dinos||!enc.dinos.length)return;
+    const et=ENC_TYPES[enc.typeIdx||0];
+    html+=`<div style="background:rgba(45,107,228,.07);border:1px solid rgba(77,142,255,.12);border-radius:9px;padding:7px;margin-bottom:6px">
+      <div style="font-size:.62rem;font-weight:800;color:${et.fence};margin-bottom:4px">Gehege ${ei+1} (${et.n}) · ${enc.dinos.length}x</div>
+      ${enc.dinos.map(ag=>{
+        const d=DINOS.find(x=>x.id===ag.dinoId);
+        const h=ag.happiness||5,hcol=h>3?'#2ecc71':h>1?'#f39c12':'#e74c3c';
+        return`<div class="dcard" onclick="openAgentDetail(G.enclosures.find(e=>e.id===${enc.id}),G.enclosures.find(e=>e.id===${enc.id}).dinos.find(a=>a.dinoId==='${ag.dinoId}'))">
+          <div class="dem">${d.em}</div>
+          <div class="db">
+            <div class="dn">${d.n}</div>
+            <div class="ds">${d.diet} · +${d.inc}/Tag</div>
+            <div class="hbar"><div class="hf" style="width:${Math.round(h)*20}%;background:${hcol}"></div></div>
+          </div>
+          <button class="fdb" onclick="event.stopPropagation();feedAg_inner(${enc.id},'${ag.dinoId}')">🍖</button>
+        </div>`;
+      }).join('')}
+      <button onclick="openDinoPicker(G.enclosures.find(e=>e.id===${enc.id}))"
+        style="width:100%;margin-top:4px;padding:5px;background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.24);border-radius:8px;color:var(--accent);font-weight:800;font-size:.66rem;cursor:pointer;font-family:'Nunito',sans-serif">
+        + Weiteren Dino hinzufügen
+      </button>
+    </div>`;
+  });
+  if(!html)html='<div style="font-size:.72rem;color:var(--text2);text-align:center;padding:1rem">Zeichne Gehege und setze Dinos ein!</div>';
+  // Lexikon
+  html+=`<div class="bl" style="margin-top:6px">Dino-Lexikon</div>`;
+  DINOS.forEach(d=>{
+    const unlocked=isUnlocked(d);
+    const bc={carnivore:'bc',herbivore:'bh',flying:'bf',water:'bw'}[d.type];
+    html+=`<div class="dcard ${unlocked?'':'locked'}" style="${unlocked?'':'opacity:.4'}"
+      onclick="${unlocked?`openLex('${d.id}')`:''}" >
+      <div class="dem">${d.em}</div>
+      <div class="db">
+        <div class="dn">${d.n} ${unlocked?'':'🔒'}</div>
+        <div class="ds" style="font-style:italic;font-size:.6rem">${d.lat}</div>
+        <span class="badge ${bc}" style="font-size:.54rem">${d.diet}</span>
+      </div><div style="color:rgba(255,255,255,.2);font-size:.95rem">›</div>
+    </div>`;
+  });
+  document.getElementById('sc').innerHTML=html;
+}
+function openLex(dinoId){
+  const d=DINOS.find(x=>x.id===dinoId);
+  const bc={carnivore:'bc',herbivore:'bh',flying:'bf',water:'bw'}[d.type];
+  const tl={carnivore:'Fleischfresser',herbivore:'Pflanzenfresser',flying:'Flugsaurier',water:'Wasserreptil'}[d.type];
+  document.getElementById('dc').innerHTML=`
+    <div class="mh"></div>
+    <div style="font-size:3.2rem;text-align:center">${d.em}</div>
+    <div class="di-name">${d.n}</div>
+    <div style="text-align:center;color:rgba(255,255,255,.35);font-style:italic;font-size:.74rem;margin-bottom:.4rem">${d.lat}</div>
+    <div style="text-align:center;margin-bottom:.5rem"><span class="badge ${bc}">${tl}</span></div>
+    <div class="sgrid">
+      <div class="sbox"><div class="sv2">${d.era}</div><div class="sk2">Zeitalter</div></div>
+      <div class="sbox"><div class="sv2">${d.len}</div><div class="sk2">Länge</div></div>
+      <div class="sbox"><div class="sv2">${d.wt}</div><div class="sk2">Gewicht</div></div>
+      <div class="sbox"><div class="sv2">${'⭐'.repeat(d.att)}</div><div class="sk2">Attraktion</div></div>
+    </div>
+    <div class="fp">${d.fact}</div>
+    <div class="fk">${d.kid}</div>
+    <button class="mclose" onclick="document.getElementById('dm').classList.remove('open')">✕ Schließen</button>
+  `;
+  document.getElementById('dm').classList.add('open');
+  document.getElementById('dm').onclick=e=>{if(e.target===document.getElementById('dm'))document.getElementById('dm').classList.remove('open');};
+}
+
+// ==================== QUIZ ====================
+let qAns=false,curQ=null;
+function openQuiz(){
+  const qs=QUIZ[G.quizMode];curQ=qs[Math.floor(Math.random()*qs.length)];qAns=false;
+  document.getElementById('qc').innerHTML=`
+    <div class="mh"></div>
+    <div class="qmode">
+      <button class="qmb ${G.quizMode==='kid'?'on':''}" onclick="setQM('kid')">🐣 Für Kleine</button>
+      <button class="qmb ${G.quizMode==='teen'?'on':''}" onclick="setQM('teen')">🔬 Für Grosse</button>
+    </div>
+    <div style="font-size:2.6rem;text-align:center;margin:.35rem 0">${curQ.em}</div>
+    <div class="qq">${curQ.q}</div>
+    <div class="qopts">${curQ.opts.map((o,i)=>`<button class="qopt" id="qo${i}" onclick="ansQ(${i})">${o}</button>`).join('')}</div>
+    <div class="qfact" id="qfact">${curQ.f}</div>
+    <div class="qrew" id="qrew">🎉 +💰 ${curQ.r} für den Park!</div>
+    <button class="qnext" id="qnext" onclick="openQuiz()">➡️ Nächste Frage</button>
+    <button class="mclose" onclick="document.getElementById('qm').classList.remove('open')">✕ Schließen</button>
+  `;
+  document.getElementById('qm').classList.add('open');
+  document.getElementById('qm').onclick=e=>{if(e.target===document.getElementById('qm'))document.getElementById('qm').classList.remove('open');};
+}
+function setQM(m){G.quizMode=m;openQuiz();}
+function ansQ(i){
+  if(qAns)return;qAns=true;
+  const ok=i===curQ.c;
+  document.querySelectorAll('.qopt').forEach((b,j)=>{
+    if(j===curQ.c)b.classList.add('correct');else if(j===i&&!ok)b.classList.add('wrong');b.onclick=null;
+  });
+  document.getElementById('qfact').style.display='block';document.getElementById('qnext').style.display='block';
+  if(ok){G.money+=curQ.r;updateHUD();document.getElementById('qrew').style.display='block';notify(`🎉 Richtig! +💰${curQ.r}`);}
+  else notify('Nicht ganz — aber du lernst was! 🦕');
+}
+
+// ==================== ENC PALETTE ====================
+function initPalette(){
+  document.getElementById('ep-colors').innerHTML=ENC_TYPES.map((et,i)=>
+    `<div class="epc ${i===0?'sel':''}" id="ec${i}" style="background:${et.fence}"
+      title="${et.label}" onclick="selEncType(${i})"></div>`
+  ).join('');
+}
+function selEncType(i){
+  G.encType=i;
+  document.querySelectorAll('.epc').forEach((el,j)=>el.classList.toggle('sel',j===i));
+}
+
+// ==================== PLACE PICKER ====================
+function initPlacePicker(){
+  document.getElementById('place-grid').innerHTML=BUILDINGS.map(b=>`
+    <div style="background:rgba(45,107,228,.1);border:1.5px solid rgba(77,142,255,.16);border-radius:9px;padding:7px;text-align:center;cursor:pointer;transition:all .13s"
+      onclick="setPlaceItem('${b.id}')"
+      onmouseover="this.style.background='rgba(45,107,228,.24)'" onmouseout="this.style.background='rgba(45,107,228,.1)'">
+      <div style="font-size:1.5rem">${b.em}</div>
+      <div style="font-size:.62rem;font-weight:800;color:white;margin-top:2px">${b.n}</div>
+      <div style="font-size:.58rem;color:var(--amber)">💰${b.cost}</div>
+    </div>`).join('');
+}
+
+// ==================== ALERT ====================
+let alertTimer;
+function showAlert(title,body){
+  document.getElementById('at').textContent=title;
+  document.getElementById('ab').innerHTML=body;
+  const el=document.getElementById('alert-box');el.style.display='block';
+  clearTimeout(alertTimer);alertTimer=setTimeout(()=>el.style.display='none',4000);
+}
+
+// ==================== NOTIF ====================
+let nt;
+function notify(msg){
+  const el=document.getElementById('notif');el.textContent=msg;el.classList.add('show');
+  clearTimeout(nt);nt=setTimeout(()=>el.classList.remove('show'),2800);
+}
+
+// ==================== INIT ====================
+function zoomFit(){
+  // Zoom to show entire island with margin
+  const margin=60;
+  const zx=(W-margin*2)/WORLD;
+  const zy=(H-margin*2)/WORLD;
+  G.zoom=Math.min(zx,zy,ZOOM_MAX);
+  G.cam.x=Math.floor(W/2-WORLD*G.zoom/2);
+  G.cam.y=Math.floor(H/2-WORLD*G.zoom/2);
+  clampCam();
+}
+
+function init(){
+  generateWorldObjects();
+  resize();
+  // Start zoomed to show full island
+  zoomFit();
+  // Place a starter gate near island center
+  const cx=WORLD/2,cy=WORLD/2;
+  G.buildings.push({id:1,type:'gate',x:cx,y:cy+600});
+  initPalette();
+  initPlacePicker();
+  setTool('enc');
+  renderOps();updateHUD();calcSat();
+  setTimeout(()=>notify('🌴 Willkommen auf Dinosaurier-Insel! Scrollrad oder Pinch zum Zoomen!'),700);
+  setTimeout(()=>notify('💡 🌍 Knopf oben rechts = Ganze Insel sehen!'),4500);
+  requestAnimationFrame(loop);
+}
+init();
+</script>
+</body>
+</html>
