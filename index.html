@@ -2,644 +2,1414 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HühnerstApp – Smart Coop Controller</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0d1a0f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="HühnerstApp">
+<meta name="description" content="Smarter Hühnerstall Controller">
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<title>HühnerstApp</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #0d1a0f;
     --card: #162018;
+    --card2: #1c2a1e;
     --border: #2a3d2c;
     --green: #4ade80;
-    --green-dim: #22c55e55;
+    --green-dim: #22c55e33;
+    --green-glow: #4ade8033;
     --amber: #fbbf24;
+    --amber-dim: #f59e0b22;
     --red: #f87171;
+    --red-dim: #ef444422;
     --blue: #60a5fa;
+    --blue-dim: #3b82f622;
     --text: #e8f5e9;
     --text-dim: #6b8f6e;
     --text-muted: #3d5c40;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
   }
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
-  body {
+  html, body {
+    height: 100%;
+    overflow: hidden;
     font-family: 'Outfit', sans-serif;
     background: var(--bg);
     color: var(--text);
-    min-height: 100vh;
-    overflow-x: hidden;
+    user-select: none;
   }
 
-  body::before {
-    content: '';
+  /* ─── INSTALL BANNER ─── */
+  #install-banner {
     position: fixed;
-    inset: 0;
-    background:
-      radial-gradient(ellipse 80% 60% at 20% 10%, #1a3d1a22 0%, transparent 60%),
-      radial-gradient(ellipse 60% 80% at 80% 90%, #2d4a1022 0%, transparent 60%);
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  .hero {
-    position: relative;
-    z-index: 1;
-    text-align: center;
-    padding: 64px 24px 40px;
-  }
-
-  .hero-badge {
-    display: inline-flex;
+    bottom: calc(70px + var(--safe-bottom));
+    left: 12px; right: 12px;
+    background: linear-gradient(135deg, #1c3a20, #152b18);
+    border: 1px solid var(--green);
+    border-radius: 16px;
+    padding: 14px 16px;
+    display: flex;
     align-items: center;
-    gap: 8px;
-    background: var(--green-dim);
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    padding: 6px 16px;
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--green);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    margin-bottom: 24px;
+    gap: 12px;
+    z-index: 999;
+    box-shadow: 0 0 30px var(--green-glow), 0 8px 30px #00000066;
+    animation: slideUp 0.4s ease;
+    display: none;
   }
 
-  .hero-badge::before {
-    content: '';
+  @keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  #install-banner .ib-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    background: var(--green-dim);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; color: var(--green);
+  }
+
+  #install-banner .ib-text { flex: 1; }
+  #install-banner .ib-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+  #install-banner .ib-sub { font-size: 11px; color: var(--text-dim); }
+
+  #install-banner .ib-btn {
+    background: var(--green);
+    color: #0a1a0c;
+    border: none;
+    border-radius: 10px;
+    padding: 8px 14px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  #install-banner .ib-close {
+    background: none; border: none; color: var(--text-muted);
+    font-size: 18px; cursor: pointer; padding: 0 4px; line-height: 1;
+    flex-shrink: 0;
+  }
+
+  /* ─── APP SHELL ─── */
+  #app {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+    padding-top: var(--safe-top);
+  }
+
+  /* ─── PAGES ─── */
+  .page {
+    display: none;
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: none;
+    padding-bottom: 8px;
+  }
+  .page::-webkit-scrollbar { display: none; }
+  .page.active { display: flex; flex-direction: column; }
+
+  /* ─── STATUS BAR ─── */
+  .app-statusbar {
+    padding: 12px 20px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .app-statusbar .time {
+    font-size: 15px;
+    font-weight: 600;
+    font-family: 'DM Mono', monospace;
+    color: var(--text-dim);
+  }
+
+  .conn-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: 'DM Mono', monospace;
+  }
+
+  .conn-dot {
     width: 7px; height: 7px;
     border-radius: 50%;
     background: var(--green);
-    box-shadow: 0 0 8px var(--green);
+    box-shadow: 0 0 6px var(--green);
     animation: pulse 2s infinite;
   }
 
   @keyframes pulse {
     0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.6; transform: scale(0.85); }
+    50% { opacity: 0.5; transform: scale(0.8); }
   }
 
-  h1 {
+  /* ─── PAGE HEADER ─── */
+  .page-header {
+    padding: 16px 20px 8px;
+    flex-shrink: 0;
+  }
+
+  .page-eyebrow {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-muted);
+    font-weight: 600;
+    margin-bottom: 3px;
+  }
+
+  .page-title {
     font-family: 'DM Serif Display', serif;
-    font-size: clamp(2.8rem, 7vw, 5rem);
-    line-height: 1.05;
-    letter-spacing: -0.02em;
+    font-size: 26px;
     color: var(--text);
+    line-height: 1.1;
+  }
+
+  .page-title em { font-style: italic; color: var(--amber); }
+
+  /* ─── SCROLL CONTENT ─── */
+  .scroll-content { flex: 1; padding: 0 14px; }
+
+  /* ─── STATUS CARD ─── */
+  .status-card {
+    background: linear-gradient(135deg, #1c3a20, #152b18);
+    border: 1px solid #2d4a30;
+    border-radius: 20px;
+    padding: 16px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .sc-icon {
+    width: 48px; height: 48px;
+    border-radius: 14px;
+    background: var(--green-dim);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--green);
+    flex-shrink: 0;
+  }
+  .sc-icon svg { width: 24px; height: 24px; }
+
+  .sc-label { font-size: 11px; color: var(--text-muted); margin-bottom: 3px; }
+  .sc-value { font-size: 17px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+  .sc-time { font-size: 10px; color: var(--green); font-family: 'DM Mono', monospace; }
+
+  .sc-sensors {
+    margin-left: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: flex-end;
+  }
+
+  .sensor-pill {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: #ffffff0a;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    color: var(--text-dim);
+  }
+  .sensor-pill svg { width: 11px; height: 11px; }
+
+  /* ─── SECTION HEADER ─── */
+  .section-header {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-muted);
+    font-weight: 600;
+    margin: 16px 0 10px;
+  }
+
+  /* ─── CONTROL GRID ─── */
+  .ctrl-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
     margin-bottom: 16px;
   }
 
-  h1 span { font-style: italic; color: var(--amber); }
-
-  .hero-sub {
-    font-size: 16px;
-    color: var(--text-dim);
-    max-width: 480px;
-    margin: 0 auto 40px;
-    line-height: 1.6;
-    font-weight: 300;
-  }
-
-  .webapp-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 12px;
-    background: var(--green);
-    color: #0a1a0c;
-    font-family: 'Outfit', sans-serif;
-    font-size: 15px;
-    font-weight: 700;
-    padding: 14px 28px;
-    border-radius: 14px;
-    text-decoration: none;
-    transition: all 0.2s ease;
-    box-shadow: 0 0 30px #4ade8033, 0 4px 20px #00000055;
-    letter-spacing: 0.01em;
-  }
-
-  .webapp-btn:hover {
-    background: #6ee7a0;
-    transform: translateY(-2px);
-    box-shadow: 0 0 40px #4ade8055, 0 8px 30px #00000055;
-  }
-
-  .webapp-btn svg { width: 20px; height: 20px; flex-shrink: 0; }
-
-  .btn-note {
-    display: block;
-    font-size: 11px;
-    font-weight: 400;
-    opacity: 0.7;
-    margin-top: 2px;
-  }
-
-  .scene {
-    position: relative;
-    z-index: 1;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    gap: 40px;
-    padding: 20px 24px 80px;
-    flex-wrap: wrap;
-  }
-
-  .phone-wrap {
-    flex-shrink: 0;
-    position: sticky;
-    top: 30px;
-  }
-
-  .phone {
-    width: 320px;
-    height: 680px;
-    background: #0a0f0b;
-    border-radius: 44px;
-    border: 2px solid #2a3d2c;
-    box-shadow: 0 0 0 1px #1a2d1c, 0 40px 80px #00000088, inset 0 1px 0 #3a5a3c33;
+  .ctrl-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 16px 14px;
+    cursor: pointer;
     position: relative;
     overflow: hidden;
+    transition: all 0.25s ease;
+    active: scale(0.97);
   }
 
-  .phone::before {
+  .ctrl-card:active { transform: scale(0.96); }
+
+  .ctrl-card.on-green { border-color: var(--green); background: #1e3522; }
+  .ctrl-card.on-amber { border-color: var(--amber); background: #28200e; }
+  .ctrl-card.on-blue  { border-color: var(--blue);  background: #0e1e2a; }
+  .ctrl-card.on-red   { border-color: var(--red);   background: #2a0e0e; }
+
+  .ctrl-card::before {
     content: '';
     position: absolute;
-    top: 12px; left: 50%;
-    transform: translateX(-50%);
-    width: 110px; height: 28px;
-    background: #0a0f0b;
-    border-radius: 999px;
-    z-index: 10;
-    border: 1.5px solid #2a3d2c;
-  }
-
-  .phone::after {
-    content: '';
-    position: absolute;
-    top: 19px; left: 50%;
-    transform: translateX(-50%);
-    width: 10px; height: 10px;
-    background: #1a2d1c;
-    border-radius: 50%;
-    z-index: 11;
-  }
-
-  .phone-btn-right { position: absolute; right: -3px; top: 120px; width: 3px; height: 70px; background: #2a3d2c; border-radius: 0 3px 3px 0; }
-  .phone-btn-left1 { position: absolute; left: -3px; top: 100px; width: 3px; height: 35px; background: #2a3d2c; border-radius: 3px 0 0 3px; }
-  .phone-btn-left2 { position: absolute; left: -3px; top: 148px; width: 3px; height: 50px; background: #2a3d2c; border-radius: 3px 0 0 3px; }
-  .phone-btn-left3 { position: absolute; left: -3px; top: 210px; width: 3px; height: 50px; background: #2a3d2c; border-radius: 3px 0 0 3px; }
-
-  .screen {
-    position: absolute; inset: 0;
-    border-radius: 42px;
-    background: #0d1a0f;
-    overflow-y: auto; overflow-x: hidden;
-    padding: 55px 0 16px;
-    scrollbar-width: none;
-  }
-  .screen::-webkit-scrollbar { display: none; }
-
-  .status-bar {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 0 20px; margin-bottom: 16px;
-    font-size: 11px; font-family: 'DM Mono', monospace; color: var(--text-dim);
-  }
-  .status-icons { display: flex; gap: 4px; align-items: center; }
-
-  .app-header {
-    padding: 0 18px 14px;
-    display: flex; justify-content: space-between; align-items: flex-start;
-  }
-  .app-title-small { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 500; margin-bottom: 2px; }
-  .app-title-big { font-family: 'DM Serif Display', serif; font-size: 22px; color: var(--text); line-height: 1.1; }
-  .avatar {
-    width: 34px; height: 34px; border-radius: 50%;
-    background: linear-gradient(135deg, var(--green), #16a34a);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 14px; font-weight: 700; color: #0a1a0c; flex-shrink: 0;
-  }
-
-  .status-card {
-    margin: 0 12px 12px;
-    background: linear-gradient(135deg, #1c3a20, #152b18);
-    border: 1px solid #2d4a30; border-radius: 18px;
-    padding: 14px; display: flex; align-items: center; gap: 12px;
-  }
-  .status-icon-big {
-    width: 42px; height: 42px; border-radius: 12px;
-    background: var(--green-dim);
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0; color: var(--green);
-  }
-  .status-icon-big svg { width: 22px; height: 22px; }
-  .status-label { font-size: 11px; color: var(--text-muted); margin-bottom: 2px; }
-  .status-value { font-size: 15px; font-weight: 600; color: var(--text); }
-  .status-time { font-size: 10px; color: var(--green); margin-top: 1px; font-family: 'DM Mono', monospace; }
-  .sensor-chips { margin-left: auto; display: flex; flex-direction: column; gap: 4px; align-items: flex-end; }
-  .chip {
-    display: flex; align-items: center; gap: 4px;
-    background: #ffffff0d; border-radius: 999px;
-    padding: 3px 8px; font-size: 10px;
-    color: var(--text-dim); font-family: 'DM Mono', monospace;
-  }
-  .chip svg { width: 10px; height: 10px; }
-
-  .section-label {
-    font-size: 10px; text-transform: uppercase;
-    letter-spacing: 0.12em; color: var(--text-muted);
-    font-weight: 600; padding: 0 14px;
-    margin-bottom: 8px; margin-top: 4px;
-  }
-
-  .ctrl-grid {
-    display: grid; grid-template-columns: 1fr 1fr;
-    gap: 8px; padding: 0 12px; margin-bottom: 12px;
-  }
-  .ctrl-card {
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: 16px; padding: 14px 12px;
-    cursor: pointer; position: relative; overflow: hidden;
-  }
-  .ctrl-card.active { border-color: var(--green); background: #1e3522; }
-  .ctrl-card.active-amber { border-color: var(--amber); background: #2a2010; }
-  .ctrl-card.active-blue { border-color: var(--blue); background: #101e2a; }
-  .ctrl-card::after {
-    content: ''; position: absolute;
     top: 0; left: 0; right: 0; height: 1px;
-    background: linear-gradient(90deg, transparent, #ffffff15, transparent);
+    background: linear-gradient(90deg, transparent, #ffffff12, transparent);
   }
-  .ctrl-icon { width: 22px; height: 22px; margin-bottom: 10px; display: block; color: var(--text-muted); }
-  .ctrl-card.active .ctrl-icon { color: var(--green); }
-  .ctrl-card.active-amber .ctrl-icon { color: var(--amber); }
-  .ctrl-card.active-blue .ctrl-icon { color: var(--blue); }
-  .ctrl-name { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
-  .ctrl-state { font-size: 10px; font-family: 'DM Mono', monospace; }
-  .ctrl-state.on { color: var(--green); }
-  .ctrl-state.off { color: var(--text-muted); }
-  .ctrl-state.amber { color: var(--amber); }
-  .ctrl-state.blue { color: var(--blue); }
 
-  .toggle {
-    position: absolute; top: 12px; right: 12px;
-    width: 28px; height: 16px; background: var(--border); border-radius: 999px; transition: background 0.2s;
+  .cc-icon {
+    width: 26px; height: 26px;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+    transition: color 0.25s;
   }
-  .toggle::after {
-    content: ''; position: absolute; top: 2px; left: 2px;
-    width: 12px; height: 12px; border-radius: 50%; background: var(--text-muted); transition: all 0.2s;
-  }
-  .toggle.on { background: var(--green); }
-  .toggle.on::after { left: 14px; background: #0a1a0c; }
-  .toggle.on-amber { background: var(--amber); }
-  .toggle.on-amber::after { left: 14px; background: #0a1a0c; }
-  .toggle.on-blue { background: var(--blue); }
-  .toggle.on-blue::after { left: 14px; background: #0a1a0c; }
+  .ctrl-card.on-green .cc-icon { color: var(--green); }
+  .ctrl-card.on-amber .cc-icon { color: var(--amber); }
+  .ctrl-card.on-blue  .cc-icon { color: var(--blue); }
+  .ctrl-card.on-red   .cc-icon { color: var(--red); }
 
-  .cam-card {
-    margin: 0 12px 12px;
-    background: var(--card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden;
+  .cc-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
   }
-  .cam-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px 8px; }
-  .cam-title { font-size: 12px; font-weight: 600; color: var(--text); }
-  .live-badge {
-    display: flex; align-items: center; gap: 4px;
-    font-size: 9px; font-family: 'DM Mono', monospace;
-    color: var(--red); text-transform: uppercase; letter-spacing: 0.08em;
+
+  .cc-status {
+    font-size: 10px;
+    font-family: 'DM Mono', monospace;
+    color: var(--text-muted);
+    transition: color 0.25s;
   }
-  .live-badge::before {
-    content: ''; width: 6px; height: 6px;
-    border-radius: 50%; background: var(--red); animation: pulse 1.5s infinite;
+  .ctrl-card.on-green .cc-status { color: var(--green); }
+  .ctrl-card.on-amber .cc-status { color: var(--amber); }
+  .ctrl-card.on-blue  .cc-status { color: var(--blue); }
+  .ctrl-card.on-red   .cc-status { color: var(--red); }
+
+  /* Toggle switch */
+  .cc-toggle {
+    position: absolute;
+    top: 14px; right: 14px;
+    width: 32px; height: 18px;
+    background: var(--border);
+    border-radius: 999px;
+    transition: background 0.25s;
+    pointer-events: none;
   }
-  .cam-preview {
-    height: 90px;
+  .cc-toggle::after {
+    content: '';
+    position: absolute;
+    top: 3px; left: 3px;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    transition: all 0.25s;
+  }
+  .ctrl-card.on-green .cc-toggle { background: var(--green); }
+  .ctrl-card.on-green .cc-toggle::after { left: 17px; background: #0a1a0c; }
+  .ctrl-card.on-amber .cc-toggle { background: var(--amber); }
+  .ctrl-card.on-amber .cc-toggle::after { left: 17px; background: #0a1a0c; }
+  .ctrl-card.on-blue  .cc-toggle { background: var(--blue); }
+  .ctrl-card.on-blue  .cc-toggle::after { left: 17px; background: #0a1a0c; }
+  .ctrl-card.on-red   .cc-toggle { background: var(--red); }
+  .ctrl-card.on-red   .cc-toggle::after { left: 17px; background: #0a1a0c; }
+
+  /* Ripple on card */
+  .ctrl-card .ripple {
+    position: absolute;
+    border-radius: 50%;
+    transform: scale(0);
+    animation: ripple-anim 0.5s linear;
+    background: rgba(255,255,255,0.08);
+    pointer-events: none;
+  }
+  @keyframes ripple-anim {
+    to { transform: scale(4); opacity: 0; }
+  }
+
+  /* ─── CAMERA PAGE ─── */
+  .cam-tabs-bar {
+    display: flex;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 4px;
+    gap: 4px;
+    margin-bottom: 14px;
+  }
+
+  .cam-tab-btn {
+    flex: 1;
+    text-align: center;
+    padding: 8px 4px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    background: none;
+    font-family: 'Outfit', sans-serif;
+  }
+  .cam-tab-btn.active {
+    background: var(--green-dim);
+    color: var(--green);
+  }
+
+  .cam-feed {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    margin-bottom: 14px;
+  }
+
+  .cam-viewport {
+    aspect-ratio: 16/9;
     background:
-      repeating-linear-gradient(0deg, #0d1a0f 0px, #0d1a0f 1px, transparent 1px, transparent 20px),
-      repeating-linear-gradient(90deg, #162018 0px, #162018 1px, transparent 1px, transparent 20px),
-      linear-gradient(135deg, #0d1a0f 0%, #162018 50%, #0f1e11 100%);
+      repeating-linear-gradient(0deg, #0d1a0f 0, #0d1a0f 1px, transparent 1px, transparent 22px),
+      repeating-linear-gradient(90deg, #162018 0, #162018 1px, transparent 1px, transparent 22px),
+      linear-gradient(135deg, #0a1a0c, #162018, #0f1e11);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  .cam-overlay-text {
+    background: #ffffff08;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    color: var(--text-muted);
+  }
+
+  .cam-live-dot {
+    position: absolute;
+    top: 12px; left: 12px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: #00000066;
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 10px;
+    font-family: 'DM Mono', monospace;
+    color: var(--red);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .cam-live-dot::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--red);
+    animation: pulse 1.5s infinite;
+  }
+
+  .cam-timestamp {
+    position: absolute;
+    bottom: 10px; right: 12px;
+    font-size: 10px;
+    font-family: 'DM Mono', monospace;
+    color: rgba(255,255,255,0.3);
+  }
+
+  .cam-controls {
+    display: flex;
+    gap: 8px;
+    padding: 12px;
+  }
+
+  .cam-ctrl-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-family: 'Outfit', sans-serif;
+    transition: all 0.2s;
+  }
+  .cam-ctrl-btn:active { transform: scale(0.95); }
+  .cam-ctrl-btn svg { width: 16px; height: 16px; }
+  .cam-ctrl-btn.primary { background: var(--green-dim); border-color: var(--green); color: var(--green); }
+
+  /* Recent snapshots */
+  .snapshot-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+  }
+
+  .snapshot {
+    aspect-ratio: 4/3;
+    background:
+      linear-gradient(135deg, #0a1a0c, #1c2a1e);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-start;
+    padding: 5px;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .snapshot:hover { border-color: var(--green); }
+  .snap-time {
+    font-size: 9px;
+    font-family: 'DM Mono', monospace;
+    color: rgba(255,255,255,0.35);
+  }
+
+  /* ─── SCHEDULE PAGE ─── */
+  .schedule-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .sched-item {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .sched-item.active { border-color: var(--green); }
+  .sched-item.warning { border-color: var(--amber); }
+
+  .si-icon {
+    width: 40px; height: 40px;
+    border-radius: 12px;
     display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
   }
-  .cam-preview-text {
-    font-size: 10px; color: var(--text-muted); font-family: 'DM Mono', monospace;
-    background: #ffffff08; padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border);
-  }
-  .cam-tabs { display: flex; padding: 8px; gap: 6px; }
-  .cam-tab { flex: 1; text-align: center; font-size: 10px; padding: 5px; border-radius: 8px; font-weight: 500; cursor: pointer; }
-  .cam-tab.active { background: var(--green-dim); color: var(--green); border: 1px solid #4ade8033; }
-  .cam-tab.inactive { color: var(--text-muted); border: 1px solid transparent; }
+  .si-icon svg { width: 20px; height: 20px; }
+  .si-icon.green { background: var(--green-dim); color: var(--green); }
+  .si-icon.amber { background: var(--amber-dim); color: var(--amber); }
+  .si-icon.blue  { background: var(--blue-dim);  color: var(--blue); }
+  .si-icon.red   { background: var(--red-dim);   color: var(--red); }
 
-  .schedule-card {
-    margin: 0 12px 12px;
-    background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 12px;
-  }
-  .schedule-row {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 7px 0; border-bottom: 1px solid #ffffff08;
-  }
-  .schedule-row:last-child { border-bottom: none; }
-  .sched-left { display: flex; align-items: center; gap: 8px; }
-  .sched-icon { width: 16px; height: 16px; color: var(--text-muted); flex-shrink: 0; }
-  .sched-name { font-size: 11px; font-weight: 600; color: var(--text); }
-  .sched-time { font-size: 10px; color: var(--text-muted); font-family: 'DM Mono', monospace; }
-  .sched-pct { font-size: 11px; font-weight: 600; }
-  .sched-pct.full { color: var(--green); }
-  .sched-pct.low { color: var(--red); }
+  .si-name { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+  .si-detail { font-size: 11px; color: var(--text-dim); font-family: 'DM Mono', monospace; }
 
+  .si-right { margin-left: auto; text-align: right; }
+  .si-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 999px;
+    margin-bottom: 4px;
+  }
+  .si-badge.green { background: var(--green-dim); color: var(--green); }
+  .si-badge.amber { background: var(--amber-dim); color: var(--amber); }
+  .si-badge.red   { background: var(--red-dim);   color: var(--red); }
+
+  .si-sublabel { font-size: 10px; color: var(--text-muted); font-family: 'DM Mono', monospace; }
+
+  /* Progress bar */
+  .progress-bar {
+    width: 100%;
+    height: 4px;
+    background: var(--border);
+    border-radius: 999px;
+    margin-top: 8px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.5s ease;
+  }
+  .progress-fill.green { background: var(--green); }
+  .progress-fill.amber { background: var(--amber); }
+  .progress-fill.red   { background: var(--red); }
+
+  /* ─── SETTINGS PAGE ─── */
+  .settings-group {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    overflow: hidden;
+    margin-bottom: 14px;
+  }
+
+  .settings-group-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-muted);
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  .settings-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    border-bottom: 1px solid #ffffff08;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .settings-row:last-child { border-bottom: none; }
+  .settings-row:active { background: #ffffff05; }
+
+  .sr-icon {
+    width: 34px; height: 34px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .sr-icon svg { width: 18px; height: 18px; }
+  .sr-icon.green { background: var(--green-dim); color: var(--green); }
+  .sr-icon.amber { background: var(--amber-dim); color: var(--amber); }
+  .sr-icon.blue  { background: var(--blue-dim);  color: var(--blue); }
+  .sr-icon.red   { background: var(--red-dim);   color: var(--red); }
+
+  .sr-label { font-size: 13px; font-weight: 500; color: var(--text); }
+  .sr-sub { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+  .sr-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+  .sr-value { font-size: 12px; color: var(--text-dim); font-family: 'DM Mono', monospace; }
+
+  .sr-arrow { color: var(--text-muted); }
+  .sr-arrow svg { width: 16px; height: 16px; }
+
+  /* Small toggle for settings */
+  .mini-toggle {
+    width: 40px; height: 22px;
+    background: var(--border);
+    border-radius: 999px;
+    position: relative;
+    transition: background 0.2s;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .mini-toggle::after {
+    content: '';
+    position: absolute;
+    top: 3px; left: 3px;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    transition: all 0.2s;
+  }
+  .mini-toggle.on { background: var(--green); }
+  .mini-toggle.on::after { left: 21px; background: #0a1a0c; }
+
+  /* Version tag */
+  .version-tag {
+    text-align: center;
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    color: var(--text-muted);
+    padding: 12px 0 4px;
+  }
+
+  /* ─── BOTTOM NAV ─── */
   .bottom-nav {
-    position: sticky; bottom: 0;
-    background: #0a0f0b; border-top: 1px solid var(--border);
-    display: flex; padding: 8px 0 14px;
+    flex-shrink: 0;
+    display: flex;
+    background: rgba(10, 15, 11, 0.96);
+    border-top: 1px solid var(--border);
+    padding: 10px 0 calc(10px + var(--safe-bottom));
+    backdrop-filter: blur(20px);
   }
-  .nav-item {
-    flex: 1; display: flex; flex-direction: column;
-    align-items: center; gap: 3px; font-size: 9px;
-    font-weight: 500; color: var(--text-muted); cursor: pointer; padding-top: 2px;
+
+  .nav-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    transition: color 0.2s;
+    border: none;
+    background: none;
+    font-family: 'Outfit', sans-serif;
+    padding: 4px 0;
+    position: relative;
   }
-  .nav-item.active { color: var(--green); }
-  .nav-icon { width: 18px; height: 18px; }
 
-  .info-panel { max-width: 380px; flex-shrink: 0; align-self: flex-start; }
-  .info-title { font-family: 'DM Serif Display', serif; font-size: 28px; color: var(--text); margin-bottom: 6px; line-height: 1.1; }
-  .info-title em { font-style: italic; color: var(--amber); }
-  .info-sub { font-size: 13px; color: var(--text-dim); line-height: 1.6; margin-bottom: 28px; font-weight: 300; }
+  .nav-btn svg { width: 22px; height: 22px; transition: all 0.2s; }
 
-  .feature-list { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
-  .feature-item {
-    display: flex; align-items: flex-start; gap: 12px;
-    padding: 12px 14px; background: var(--card);
-    border: 1px solid var(--border); border-radius: 14px; transition: border-color 0.2s;
+  .nav-btn.active { color: var(--green); }
+  .nav-btn.active svg { filter: drop-shadow(0 0 4px var(--green-glow)); }
+
+  .nav-btn::before {
+    content: '';
+    position: absolute;
+    top: -10px; left: 50%; transform: translateX(-50%);
+    width: 24px; height: 2px;
+    border-radius: 999px;
+    background: var(--green);
+    opacity: 0;
+    transition: opacity 0.2s;
   }
-  .feature-item:hover { border-color: var(--green); }
-  .fi-icon { width: 20px; height: 20px; flex-shrink: 0; margin-top: 1px; color: var(--text-dim); }
-  .fi-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
-  .fi-desc { font-size: 11px; color: var(--text-dim); line-height: 1.5; font-weight: 300; }
+  .nav-btn.active::before { opacity: 1; }
 
-  .stack-chips { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 28px; }
-  .stack-chip {
-    display: flex; align-items: center; gap: 5px;
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: 999px; padding: 5px 12px;
-    font-size: 11px; font-family: 'DM Mono', monospace; color: var(--text-dim);
+  /* ─── TOAST ─── */
+  #toast {
+    position: fixed;
+    bottom: calc(80px + var(--safe-bottom));
+    left: 50%; transform: translateX(-50%) translateY(10px);
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 8px 18px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text);
+    opacity: 0;
+    transition: all 0.3s ease;
+    pointer-events: none;
+    white-space: nowrap;
+    z-index: 1000;
+    box-shadow: 0 4px 20px #00000055;
   }
-  .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-  .dot-green { background: var(--green); }
-  .dot-amber { background: var(--amber); }
-  .dot-blue { background: var(--blue); }
-  .dot-red { background: var(--red); }
-
-  footer {
-    position: relative; z-index: 1;
-    text-align: center; padding: 0 24px 48px;
-    color: var(--text-muted); font-size: 12px;
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  /* ─── INSTALL SCREEN ─── */
+  #install-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: var(--safe-bottom);
   }
-  footer a { color: var(--text-dim); text-decoration: none; }
-  footer a:hover { color: var(--green); }
 
-  @media (max-width: 700px) {
-    .info-panel { order: -1; max-width: 100%; }
-    .phone-wrap { position: relative; top: 0; }
+  .is-bg {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 100% 60% at 50% 0%, #1a4a1e 0%, transparent 65%),
+      #0d1a0f;
+  }
+
+  .is-content {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 420px;
+    padding: 0 28px calc(40px + var(--safe-bottom));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .is-icon {
+    width: 88px; height: 88px;
+    border-radius: 22px;
+    background: linear-gradient(135deg, #1c3a20, #0d1a0f);
+    border: 1.5px solid #2d5a30;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--green);
+    margin-bottom: 20px;
+    margin-top: 60px;
+    box-shadow: 0 0 40px #4ade8022, 0 8px 30px #00000055;
+  }
+  .is-icon svg { width: 44px; height: 44px; }
+
+  .is-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--green-dim);
+    border: 1px solid #4ade8033;
+    border-radius: 999px;
+    padding: 4px 14px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--green);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 18px;
+  }
+  .is-badge::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 6px var(--green);
+    animation: pulse 2s infinite;
+  }
+
+  .is-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 3rem;
+    line-height: 1.05;
+    color: var(--text);
+    margin-bottom: 16px;
+    letter-spacing: -0.02em;
+  }
+  .is-title em { font-style: italic; color: var(--amber); }
+
+  .is-sub {
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.6;
+    font-weight: 300;
+    margin-bottom: 28px;
+    max-width: 300px;
+  }
+
+  .is-features {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    width: 100%;
+    margin-bottom: 32px;
+  }
+
+  .is-feature {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-dim);
+  }
+  .is-feature svg { width: 16px; height: 16px; color: var(--green); flex-shrink: 0; }
+
+  .is-install-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: var(--green);
+    color: #0a1a0c;
+    border: none;
+    border-radius: 16px;
+    padding: 17px 28px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 0 30px #4ade8033, 0 4px 20px #00000044;
+    margin-bottom: 14px;
+    letter-spacing: 0.01em;
+  }
+  .is-install-btn:active { transform: scale(0.97); }
+  .is-install-btn svg { width: 20px; height: 20px; }
+  .is-install-btn:hover { background: #6ee7a0; box-shadow: 0 0 40px #4ade8055; }
+
+  .is-hint {
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    max-width: 280px;
+    margin-bottom: 16px;
+  }
+
+  .is-version {
+    font-size: 10px;
+    font-family: 'DM Mono', monospace;
+    color: var(--text-muted);
+  }
+
+  /* Hide app shell until installed */
+  #app { display: none; }
+
+  /* Transition */
+  #install-screen.hiding {
+    animation: fadeOut 0.5s ease forwards;
+  }
+  @keyframes fadeOut {
+    to { opacity: 0; pointer-events: none; }
   }
 </style>
 </head>
 <body>
 
-<section class="hero">
-  <div class="hero-badge">Open Source Projekt</div>
-  <h1>Hühnerstall,<br><span>smart gemacht.</span></h1>
-  <p class="hero-sub">
-    Steuere deinen Hühnerstall komplett über eine native Android-App –
-    Tor, Licht, Futter, Wasser und Live-Kamera, alles in Echtzeit.
-  </p>
-  <a href="./huehnerapp.html" class="webapp-btn">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="12" cy="12" r="10"/>
-      <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-    </svg>
-    <span>
-      App öffnen &amp; installieren
-      <span class="btn-note">Direkt im Browser · PWA-Installation</span>
-    </span>
-  </a>
-</section>
+<!-- ════════════ INSTALL SCREEN ════════════ -->
+<div id="install-screen">
+  <div class="is-bg"></div>
+  <div class="is-content">
+    <div class="is-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    </div>
+    <div class="is-badge">Smart Home</div>
+    <h1 class="is-title">Hühnerstall<br><em>App</em></h1>
+    <p class="is-sub">Installiere die App auf deinem Startbildschirm für den vollen Zugriff auf alle Funktionen.</p>
 
-<div class="scene">
+    <div class="is-features">
+      <div class="is-feature">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M13 4H3v16h10V4z"/><path d="M17 8l4 4-4 4"/></svg>
+        Stalltor steuern
+      </div>
+      <div class="is-feature">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        Live-Kamera
+      </div>
+      <div class="is-feature">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        Push-Alerts
+      </div>
+      <div class="is-feature">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+        Auto-Befüllung
+      </div>
+    </div>
 
-  <div class="phone-wrap">
-    <div class="phone">
-      <div class="phone-btn-right"></div>
-      <div class="phone-btn-left1"></div>
-      <div class="phone-btn-left2"></div>
-      <div class="phone-btn-left3"></div>
+    <button class="is-install-btn" id="is-btn" onclick="promptInstall()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <path d="M12 3v13M5 14l7 7 7-7"/>
+        <path d="M3 21h18"/>
+      </svg>
+      App installieren
+    </button>
 
-      <div class="screen">
-        <div class="status-bar">
-          <span>09:41</span>
-          <div class="status-icons">
-            <svg width="12" height="10" viewBox="0 0 12 10" fill="currentColor"><rect x="0" y="4" width="2" height="6" rx="0.5"/><rect x="3" y="2.5" width="2" height="7.5" rx="0.5"/><rect x="6" y="1" width="2" height="9" rx="0.5"/><rect x="9" y="0" width="2" height="10" rx="0.5" opacity="0.3"/></svg>
-            <svg width="14" height="10" viewBox="0 0 16 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 3C3.5 0.5 12.5 0.5 15 3"/><path d="M3 6C4.8 4.2 11.2 4.2 13 6"/><path d="M5.5 9C6.5 8 9.5 8 10.5 9"/><circle cx="8" cy="11.5" r="0.5" fill="currentColor"/></svg>
-            <svg width="22" height="11" viewBox="0 0 22 11" fill="none"><rect x="0.5" y="0.5" width="18" height="10" rx="2.5" stroke="currentColor" stroke-opacity="0.35"/><rect x="2" y="2" width="12" height="7" rx="1.5" fill="currentColor"/><path d="M20 3.5v4c.8-.5 1.3-1.2 1.3-2s-.5-1.5-1.3-2z" fill="currentColor" fill-opacity="0.4"/></svg>
+    <p class="is-hint" id="is-hint">Chrome erkennt die App automatisch – tippe auf "Installieren".</p>
+    <p class="is-version">Version 0.1.0 · Demo</p>
+  </div>
+</div>
+
+<div id="app">
+
+  <!-- ════════════ PAGE: HOME ════════════ -->
+  <div id="page-home" class="page active">
+    <div class="app-statusbar">
+      <span class="time" id="clock">09:41</span>
+      <div class="conn-indicator">
+        <div class="conn-dot"></div>
+        <span>Demo-Modus</span>
+      </div>
+    </div>
+    <div class="page-header">
+      <div class="page-eyebrow">Guten Morgen</div>
+      <div class="page-title">Mein Stall</div>
+    </div>
+    <div class="scroll-content">
+
+      <!-- Status -->
+      <div class="status-card">
+        <div class="sc-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </div>
+        <div>
+          <div class="sc-label">Stallstatus</div>
+          <div class="sc-value" id="status-text">Alles OK</div>
+          <div class="sc-time" id="status-time">Zuletzt: gerade jetzt</div>
+        </div>
+        <div class="sc-sensors">
+          <div class="sensor-pill">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/></svg>
+            18.5°C
+          </div>
+          <div class="sensor-pill">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+            64%
           </div>
         </div>
+      </div>
 
-        <div class="app-header">
+      <div class="section-header">Steuerung</div>
+      <div class="ctrl-grid">
+        <div class="ctrl-card on-green" id="ctrl-door" onclick="toggleCtrl(this,'door')">
+          <div class="cc-toggle"></div>
+          <svg class="cc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 4H3v16h10V4z"/><path d="M17 8l4 4-4 4"/><path d="M21 12H9"/></svg>
+          <div class="cc-name">Stalltor</div>
+          <div class="cc-status">Offen</div>
+        </div>
+
+        <div class="ctrl-card on-amber" id="ctrl-light" onclick="toggleCtrl(this,'light')">
+          <div class="cc-toggle"></div>
+          <svg class="cc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          <div class="cc-name">Licht</div>
+          <div class="cc-status">An · 40%</div>
+        </div>
+
+        <div class="ctrl-card" id="ctrl-feeder" onclick="toggleCtrl(this,'feeder')">
+          <div class="cc-toggle"></div>
+          <svg class="cc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          <div class="cc-name">Futterspender</div>
+          <div class="cc-status">Automatisch</div>
+        </div>
+
+        <div class="ctrl-card on-blue" id="ctrl-water" onclick="toggleCtrl(this,'water')">
+          <div class="cc-toggle"></div>
+          <svg class="cc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+          <div class="cc-name">Wasser</div>
+          <div class="cc-status">Auffüllen…</div>
+        </div>
+      </div>
+
+      <div class="section-header">Füllstand</div>
+      <div class="settings-group" style="margin-bottom:16px;">
+        <div style="padding:14px 16px; border-bottom:1px solid #ffffff08;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <span style="font-size:13px;font-weight:600;color:var(--text);">Futter</span>
+            <span style="font-size:12px;font-family:'DM Mono',monospace;color:var(--green);">78%</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill green" style="width:78%"></div></div>
+        </div>
+        <div style="padding:14px 16px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <span style="font-size:13px;font-weight:600;color:var(--text);">Wasser</span>
+            <span style="font-size:12px;font-family:'DM Mono',monospace;color:var(--red);">12% !</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill red" style="width:12%"></div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ════════════ PAGE: CAMERA ════════════ -->
+  <div id="page-camera" class="page">
+    <div class="app-statusbar">
+      <span class="time" id="clock2">09:41</span>
+      <div class="conn-indicator"><div class="conn-dot"></div><span>Demo-Modus</span></div>
+    </div>
+    <div class="page-header">
+      <div class="page-eyebrow">Überwachung</div>
+      <div class="page-title"><em>Kamera</em></div>
+    </div>
+    <div class="scroll-content">
+
+      <div class="cam-tabs-bar">
+        <button class="cam-tab-btn active" onclick="switchCam(this,'inside')">Innen</button>
+        <button class="cam-tab-btn" onclick="switchCam(this,'outside')">Aussen</button>
+        <button class="cam-tab-btn" onclick="switchCam(this,'snapshots')">Archiv</button>
+      </div>
+
+      <div id="cam-live" class="cam-feed">
+        <div class="cam-viewport">
+          <div class="cam-live-dot">Live</div>
+          <div class="cam-overlay-text" id="cam-label">Innenkamera · RTSP aktiv</div>
+          <div class="cam-timestamp" id="cam-ts">09:41:22</div>
+        </div>
+        <div class="cam-controls">
+          <button class="cam-ctrl-btn primary" onclick="toast('Screenshot gespeichert')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            Snapshot
+          </button>
+          <button class="cam-ctrl-btn" onclick="toast('Kamera wird neugestartet…')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            Neustart
+          </button>
+          <button class="cam-ctrl-btn" onclick="toast('Vollbild nicht im Demo verfügbar')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+            Vollbild
+          </button>
+        </div>
+      </div>
+
+      <div id="cam-snapshots" style="display:none;">
+        <div class="section-header">Letzte Aufnahmen</div>
+        <div class="snapshot-grid">
+          <div class="snapshot" onclick="toast('Bild von 08:30')"><span class="snap-time">08:30</span></div>
+          <div class="snapshot" onclick="toast('Bild von 07:15')"><span class="snap-time">07:15</span></div>
+          <div class="snapshot" onclick="toast('Bild von 06:00')"><span class="snap-time">06:00</span></div>
+          <div class="snapshot" onclick="toast('Bild von 22:45')"><span class="snap-time">22:45</span></div>
+          <div class="snapshot" onclick="toast('Bild von 18:00')"><span class="snap-time">18:00</span></div>
+          <div class="snapshot" onclick="toast('Bild von 17:30')"><span class="snap-time">17:30</span></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ════════════ PAGE: SCHEDULE ════════════ -->
+  <div id="page-schedule" class="page">
+    <div class="app-statusbar">
+      <span class="time" id="clock3">09:41</span>
+      <div class="conn-indicator"><div class="conn-dot"></div><span>Demo-Modus</span></div>
+    </div>
+    <div class="page-header">
+      <div class="page-eyebrow">Automatisierung</div>
+      <div class="page-title">Zeitplan</div>
+    </div>
+    <div class="scroll-content">
+      <div class="section-header">Heute aktiv</div>
+      <div class="schedule-list">
+        <div class="sched-item active">
+          <div class="si-icon green">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/></svg>
+          </div>
           <div>
-            <div class="app-title-small">Willkommen zurück</div>
-            <div class="app-title-big">Mein Stall</div>
+            <div class="si-name">Tor öffnen</div>
+            <div class="si-detail">tägl. 07:00 Uhr</div>
           </div>
-          <div class="avatar">B</div>
+          <div class="si-right">
+            <div class="si-badge green">Erledigt</div>
+            <div class="si-sublabel">heute 07:00</div>
+          </div>
         </div>
 
-        <div class="status-card">
-          <div class="status-icon-big">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <div class="sched-item active">
+          <div class="si-icon amber">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
           </div>
           <div>
-            <div class="status-label">Stallstatus</div>
-            <div class="status-value">Alles OK</div>
-            <div class="status-time">Zuletzt: vor 12 Sek.</div>
+            <div class="si-name">Futter</div>
+            <div class="si-detail">08:00 / 17:00 Uhr</div>
           </div>
-          <div class="sensor-chips">
-            <div class="chip">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/></svg>
-              18.5°C
-            </div>
-            <div class="chip">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
-              64%
-            </div>
+          <div class="si-right">
+            <div class="si-badge green">Aktiv</div>
+            <div class="si-sublabel">nächstes: 17:00</div>
           </div>
         </div>
 
-        <div class="section-label">Steuerung</div>
-        <div class="ctrl-grid">
-          <div class="ctrl-card active">
-            <div class="toggle on"></div>
-            <svg class="ctrl-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 4H3v16h10V4z"/><path d="M17 8l4 4-4 4"/><path d="M21 12H9"/></svg>
-            <div class="ctrl-name">Tor</div>
-            <div class="ctrl-state on">Offen</div>
+        <div class="sched-item warning">
+          <div class="si-icon red">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
           </div>
-          <div class="ctrl-card active-amber">
-            <div class="toggle on-amber"></div>
-            <svg class="ctrl-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-            <div class="ctrl-name">Licht</div>
-            <div class="ctrl-state amber">An · 40%</div>
+          <div>
+            <div class="si-name">Wasser</div>
+            <div class="si-detail">Trigger bei &lt; 20%</div>
           </div>
-          <div class="ctrl-card">
-            <div class="toggle"></div>
-            <svg class="ctrl-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-            <div class="ctrl-name">Futterspender</div>
-            <div class="ctrl-state off">Automatisch</div>
-          </div>
-          <div class="ctrl-card active-blue">
-            <div class="toggle on-blue"></div>
-            <svg class="ctrl-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
-            <div class="ctrl-name">Wasser</div>
-            <div class="ctrl-state blue">Auffüllen…</div>
+          <div class="si-right">
+            <div class="si-badge red">Warnung</div>
+            <div class="si-sublabel">12% · läuft</div>
           </div>
         </div>
 
-        <div class="section-label">Kamera</div>
-        <div class="cam-card">
-          <div class="cam-header">
-            <div class="cam-title">Live-Feed</div>
-            <div class="live-badge">Live</div>
+        <div class="sched-item">
+          <div class="si-icon blue">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
           </div>
-          <div class="cam-preview">
-            <div class="cam-preview-text">RTSP Stream aktiv</div>
+          <div>
+            <div class="si-name">Tor schliessen</div>
+            <div class="si-detail">tägl. 21:00 Uhr</div>
           </div>
-          <div class="cam-tabs">
-            <div class="cam-tab active">Innen</div>
-            <div class="cam-tab inactive">Aussen</div>
-            <div class="cam-tab inactive">Letzte Bilder</div>
-          </div>
-        </div>
-
-        <div class="section-label">Zeitplan &amp; Füllstand</div>
-        <div class="schedule-card">
-          <div class="schedule-row">
-            <div class="sched-left">
-              <svg class="sched-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/></svg>
-              <div>
-                <div class="sched-name">Tor öffnen</div>
-                <div class="sched-time">tägl. 07:00</div>
-              </div>
-            </div>
-            <div class="sched-pct full">Aktiv</div>
-          </div>
-          <div class="schedule-row">
-            <div class="sched-left">
-              <svg class="sched-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-              <div>
-                <div class="sched-name">Futter</div>
-                <div class="sched-time">tägl. 08:00 / 17:00</div>
-              </div>
-            </div>
-            <div class="sched-pct full">78%</div>
-          </div>
-          <div class="schedule-row">
-            <div class="sched-left">
-              <svg class="sched-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
-              <div>
-                <div class="sched-name">Wasser</div>
-                <div class="sched-time">bei &lt; 20%</div>
-              </div>
-            </div>
-            <div class="sched-pct low">12%</div>
-          </div>
-        </div>
-
-        <div class="bottom-nav">
-          <div class="nav-item active">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-            Start
-          </div>
-          <div class="nav-item">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-            Kamera
-          </div>
-          <div class="nav-item">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            Zeitplan
-          </div>
-          <div class="nav-item">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
-            Einst.
+          <div class="si-right">
+            <div class="si-badge amber">Ausstehend</div>
+            <div class="si-sublabel">heute 21:00</div>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="info-panel">
-    <div class="info-title">Ein Stall.<br><em>Volle Kontrolle.</em></div>
-    <p class="info-sub">
-      Native Android-App für die smarte Steuerung deines Hühnerstalls –
-      gebaut mit Firebase Realtime Database &amp; Raspberry Pi 5.
-    </p>
-
-    <ul class="feature-list">
-      <li class="feature-item">
-        <svg class="fi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 4H3v16h10V4z"/><path d="M17 8l4 4-4 4"/><path d="M21 12H9"/></svg>
-        <div>
-          <div class="fi-title">Automatisches Stalltor</div>
-          <div class="fi-desc">Per App oder Zeitplan öffnen &amp; schliessen. Mit GPIO-Relais &amp; DC-Motor am Pi gesteuert.</div>
-        </div>
-      </li>
-      <li class="feature-item">
-        <svg class="fi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-        <div>
-          <div class="fi-title">Live-Kamera (innen &amp; aussen)</div>
-          <div class="fi-desc">RTSP-Stream direkt in der App. Snapshots werden in Firebase Storage gespeichert.</div>
-        </div>
-      </li>
-      <li class="feature-item">
-        <svg class="fi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-        <div>
-          <div class="fi-title">Futter &amp; Wasser automatisch</div>
-          <div class="fi-desc">Peristaltikpumpe &amp; Servo per Zeitplan oder manuell. Füllstand-Sensor zeigt Warnungen.</div>
-        </div>
-      </li>
-      <li class="feature-item">
-        <svg class="fi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/></svg>
-        <div>
-          <div class="fi-title">Lichtsteuerung &amp; Sensoren</div>
-          <div class="fi-desc">Dimmbares Licht per Relais. Temperatur &amp; Luftfeuchtigkeit via DHT22 in Echtzeit.</div>
-        </div>
-      </li>
-      <li class="feature-item">
-        <svg class="fi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-        <div>
-          <div class="fi-title">Push-Benachrichtigungen</div>
-          <div class="fi-desc">Wasser leer? Temperatur zu hoch? Sofortige Meldung via Firebase Cloud Messaging.</div>
-        </div>
-      </li>
-    </ul>
-
-    <div class="stack-chips">
-      <div class="stack-chip"><span class="dot dot-amber"></span>Kotlin + Jetpack Compose</div>
-      <div class="stack-chip"><span class="dot dot-green"></span>Firebase Realtime DB</div>
-      <div class="stack-chip"><span class="dot dot-blue"></span>Raspberry Pi 5</div>
-      <div class="stack-chip"><span class="dot dot-green"></span>Python GPIO</div>
-      <div class="stack-chip"><span class="dot dot-amber"></span>Firebase Auth</div>
-      <div class="stack-chip"><span class="dot dot-red"></span>FCM Push</div>
-      <div class="stack-chip"><span class="dot dot-blue"></span>Firebase Storage</div>
-      <div class="stack-chip"><span class="dot dot-green"></span>WebRTC / RTSP</div>
+  <!-- ════════════ PAGE: SETTINGS ════════════ -->
+  <div id="page-settings" class="page">
+    <div class="app-statusbar">
+      <span class="time" id="clock4">09:41</span>
+      <div class="conn-indicator"><div class="conn-dot"></div><span>Demo-Modus</span></div>
     </div>
+    <div class="page-header">
+      <div class="page-eyebrow">Konfiguration</div>
+      <div class="page-title">Einstellungen</div>
+    </div>
+    <div class="scroll-content">
 
-    <a href="./huehnerapp.html" class="webapp-btn">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="10"/>
-        <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-      </svg>
-      <span>
-        App öffnen &amp; installieren
-        <span class="btn-note">Direkt im Browser · PWA-Installation</span>
-      </span>
-    </a>
+      <div class="settings-group-label">Verbindung</div>
+      <div class="settings-group">
+        <div class="settings-row" onclick="toast('Firebase: nicht verbunden (Demo)')">
+          <div class="sr-icon green">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          </div>
+          <div>
+            <div class="sr-label">Firebase</div>
+            <div class="sr-sub">Realtime Database</div>
+          </div>
+          <div class="sr-right">
+            <span class="sr-value">Demo</span>
+            <div class="sr-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+          </div>
+        </div>
+        <div class="settings-row" onclick="toast('Raspberry Pi: nicht verbunden (Demo)')">
+          <div class="sr-icon blue">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          </div>
+          <div>
+            <div class="sr-label">Raspberry Pi 5</div>
+            <div class="sr-sub">192.168.1.XX</div>
+          </div>
+          <div class="sr-right">
+            <span class="sr-value">Offline</span>
+            <div class="sr-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-group-label">Benachrichtigungen</div>
+      <div class="settings-group">
+        <div class="settings-row">
+          <div class="sr-icon amber">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          </div>
+          <div>
+            <div class="sr-label">Push-Alerts</div>
+            <div class="sr-sub">via Firebase FCM</div>
+          </div>
+          <div class="sr-right">
+            <div class="mini-toggle on" onclick="this.classList.toggle('on');toast('Push-Alerts ' + (this.classList.contains('on')?'aktiviert':'deaktiviert'))"></div>
+          </div>
+        </div>
+        <div class="settings-row">
+          <div class="sr-icon red">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+          </div>
+          <div>
+            <div class="sr-label">Wasser-Warnung</div>
+            <div class="sr-sub">Schwellwert: 20%</div>
+          </div>
+          <div class="sr-right">
+            <div class="mini-toggle on" onclick="this.classList.toggle('on')"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-group-label">App</div>
+      <div class="settings-group">
+        <div class="settings-row" onclick="promptInstall()">
+          <div class="sr-icon green">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v13M5 14l7 7 7-7"/><path d="M3 21h18"/></svg>
+          </div>
+          <div>
+            <div class="sr-label">App installieren</div>
+            <div class="sr-sub">Zum Startbildschirm hinzufügen</div>
+          </div>
+          <div class="sr-right">
+            <div class="sr-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+          </div>
+        </div>
+        <div class="settings-row" onclick="toast('Version 0.1.0 – Demo')">
+          <div class="sr-icon blue">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </div>
+          <div>
+            <div class="sr-label">Version</div>
+            <div class="sr-sub">HühnerstApp</div>
+          </div>
+          <div class="sr-right">
+            <span class="sr-value">0.1.0</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="version-tag">HühnerstApp · Demo · github.com/DEIN-USERNAME/huehnerapp</div>
+    </div>
   </div>
 
+  <!-- ════════════ BOTTOM NAV ════════════ -->
+  <nav class="bottom-nav">
+    <button class="nav-btn active" id="nav-home" onclick="navigate('home')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Start
+    </button>
+    <button class="nav-btn" id="nav-camera" onclick="navigate('camera')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      Kamera
+    </button>
+    <button class="nav-btn" id="nav-schedule" onclick="navigate('schedule')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Zeitplan
+    </button>
+    <button class="nav-btn" id="nav-settings" onclick="navigate('settings')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+      Einst.
+    </button>
+  </nav>
 </div>
 
-<footer>
-  <p>Open Source · <a href="https://github.com/DEIN-USERNAME/huehnerapp">github.com/DEIN-USERNAME/huehnerapp</a></p>
-</footer>
+<!-- Install Banner -->
+<div id="install-banner">
+  <div class="ib-icon">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v13M5 14l7 7 7-7"/><path d="M3 21h18"/></svg>
+  </div>
+  <div class="ib-text">
+    <div class="ib-title">App installieren</div>
+    <div class="ib-sub">Zum Startbildschirm hinzufügen</div>
+  </div>
+  <button class="ib-btn" onclick="promptInstall()">Installieren</button>
+  <button class="ib-close" onclick="document.getElementById('install-banner').style.display='none'">×</button>
+</div>
 
+<div id="toast"></div>
+
+<script>
+  // ─── PWA MANIFEST (inline) ───────────────────────────────────
+  // ─── SERVICE WORKER ──────────────────────────────────────────
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  }
+
+  // ─── INSTALL SCREEN LOGIC ────────────────────────────────────
+  const isStandalone =
+    window.matchMedia('(display-mode: standalone)').matches ||
+    window.navigator.standalone === true;
+
+  function showApp() {
+    const screen = document.getElementById('install-screen');
+    const app = document.getElementById('app');
+    screen.classList.add('hiding');
+    setTimeout(() => { screen.style.display = 'none'; }, 500);
+    app.style.display = 'flex';
+  }
+
+  // Already installed → skip screen immediately
+  if (isStandalone) {
+    document.getElementById('install-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+  }
+
+  // ─── INSTALL PROMPT ──────────────────────────────────────────
+  let deferredPrompt = null;
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    // Update hint text now that Chrome is ready
+    const hint = document.getElementById('is-hint');
+    if (hint) hint.textContent = 'Chrome ist bereit – tippe auf "App installieren".';
+  });
+
+  window.addEventListener('appinstalled', () => {
+    showApp();
+  });
+
+  function promptInstall() {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(choice => {
+        deferredPrompt = null;
+        if (choice.outcome === 'accepted') showApp();
+      });
+    } else if (isStandalone) {
+      showApp();
+    } else {
+      const hint = document.getElementById('is-hint');
+      hint.textContent = 'Tippe in Chrome oben rechts auf die drei Punkte → "Zum Startbildschirm hinzufügen".';
+      hint.style.color = 'var(--amber)';
+    }
+  }
+
+  // ─── CLOCK ───────────────────────────────────────────────────
+  function updateClock() {
+    const t = new Date().toLocaleTimeString('de-CH', {hour:'2-digit', minute:'2-digit'});
+    ['clock','clock2','clock3','clock4'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = t;
+    });
+    const ts = document.getElementById('cam-ts');
+    if (ts) ts.textContent = new Date().toLocaleTimeString('de-CH');
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  // ─── NAVIGATION ──────────────────────────────────────────────
+  function navigate(page) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('page-' + page).classList.add('active');
+    document.getElementById('nav-' + page).classList.add('active');
+  }
+
+  // ─── CONTROL TOGGLE ──────────────────────────────────────────
+  const ctrlConfig = {
+    door:   { off: 'Geschlossen',        on:  'Offen',         cls: 'on-green' },
+    light:  { off: 'Aus',                on:  'An · 40%',      cls: 'on-amber' },
+    feeder: { off: 'Automatisch',        on:  'Manuell · läuft', cls: 'on-green' },
+    water:  { off: 'Bereit',             on:  'Auffüllen…',    cls: 'on-blue'  },
+  };
+
+  function toggleCtrl(card, key) {
+    const cfg = ctrlConfig[key];
+    const isOn = card.classList.contains(cfg.cls);
+    if (isOn) {
+      card.classList.remove(cfg.cls);
+      card.querySelector('.cc-status').textContent = cfg.off;
+    } else {
+      card.classList.add(cfg.cls);
+      card.querySelector('.cc-status').textContent = cfg.on;
+    }
+    // Ripple effect
+    const r = document.createElement('span');
+    r.className = 'ripple';
+    r.style.cssText = `width:${card.offsetWidth*2}px;height:${card.offsetWidth*2}px;left:0;top:0;`;
+    card.appendChild(r);
+    setTimeout(() => r.remove(), 600);
+
+    toast((isOn ? cfg.off : cfg.on) + ' gesetzt (Demo)');
+    updateStatusCard();
+  }
+
+  function updateStatusCard() {
+    const allOff = ['ctrl-door','ctrl-light','ctrl-feeder','ctrl-water']
+      .every(id => !document.getElementById(id).className.match(/on-/));
+    document.getElementById('status-text').textContent = allOff ? 'Alles aus' : 'Alles OK';
+    document.getElementById('status-time').textContent = 'Zuletzt: gerade eben';
+  }
+
+  // ─── CAMERA TABS ─────────────────────────────────────────────
+  function switchCam(btn, view) {
+    document.querySelectorAll('.cam-tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const live = document.getElementById('cam-live');
+    const snaps = document.getElementById('cam-snapshots');
+    if (view === 'snapshots') {
+      live.style.display = 'none';
+      snaps.style.display = 'block';
+    } else {
+      live.style.display = 'block';
+      snaps.style.display = 'none';
+      document.getElementById('cam-label').textContent =
+        view === 'inside' ? 'Innenkamera · RTSP aktiv' : 'Aussenkamera · RTSP aktiv';
+    }
+  }
+
+  // ─── TOAST ───────────────────────────────────────────────────
+  let toastTimer;
+  function toast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+  }
+</script>
 </body>
 </html>
