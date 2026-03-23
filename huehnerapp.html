@@ -710,9 +710,209 @@
     box-shadow: 0 4px 20px #00000055;
   }
   #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  /* ─── INSTALL SCREEN ─── */
+  #install-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: var(--safe-bottom);
+  }
+
+  .is-bg {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 100% 60% at 50% 0%, #1a4a1e 0%, transparent 65%),
+      #0d1a0f;
+  }
+
+  .is-content {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 420px;
+    padding: 0 28px calc(40px + var(--safe-bottom));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .is-icon {
+    width: 88px; height: 88px;
+    border-radius: 22px;
+    background: linear-gradient(135deg, #1c3a20, #0d1a0f);
+    border: 1.5px solid #2d5a30;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--green);
+    margin-bottom: 20px;
+    margin-top: 60px;
+    box-shadow: 0 0 40px #4ade8022, 0 8px 30px #00000055;
+  }
+  .is-icon svg { width: 44px; height: 44px; }
+
+  .is-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--green-dim);
+    border: 1px solid #4ade8033;
+    border-radius: 999px;
+    padding: 4px 14px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--green);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 18px;
+  }
+  .is-badge::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 6px var(--green);
+    animation: pulse 2s infinite;
+  }
+
+  .is-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 3rem;
+    line-height: 1.05;
+    color: var(--text);
+    margin-bottom: 16px;
+    letter-spacing: -0.02em;
+  }
+  .is-title em { font-style: italic; color: var(--amber); }
+
+  .is-sub {
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.6;
+    font-weight: 300;
+    margin-bottom: 28px;
+    max-width: 300px;
+  }
+
+  .is-features {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    width: 100%;
+    margin-bottom: 32px;
+  }
+
+  .is-feature {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-dim);
+  }
+  .is-feature svg { width: 16px; height: 16px; color: var(--green); flex-shrink: 0; }
+
+  .is-install-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: var(--green);
+    color: #0a1a0c;
+    border: none;
+    border-radius: 16px;
+    padding: 17px 28px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 0 30px #4ade8033, 0 4px 20px #00000044;
+    margin-bottom: 14px;
+    letter-spacing: 0.01em;
+  }
+  .is-install-btn:active { transform: scale(0.97); }
+  .is-install-btn svg { width: 20px; height: 20px; }
+  .is-install-btn:hover { background: #6ee7a0; box-shadow: 0 0 40px #4ade8055; }
+
+  .is-hint {
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    max-width: 280px;
+    margin-bottom: 16px;
+  }
+
+  .is-version {
+    font-size: 10px;
+    font-family: 'DM Mono', monospace;
+    color: var(--text-muted);
+  }
+
+  /* Hide app shell until installed */
+  #app { display: none; }
+
+  /* Transition */
+  #install-screen.hiding {
+    animation: fadeOut 0.5s ease forwards;
+  }
+  @keyframes fadeOut {
+    to { opacity: 0; pointer-events: none; }
+  }
 </style>
 </head>
 <body>
+
+<!-- ════════════ INSTALL SCREEN ════════════ -->
+<div id="install-screen">
+  <div class="is-bg"></div>
+  <div class="is-content">
+    <div class="is-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    </div>
+    <div class="is-badge">Smart Home</div>
+    <h1 class="is-title">Hühnerstall<br><em>App</em></h1>
+    <p class="is-sub">Installiere die App auf deinem Startbildschirm für den vollen Zugriff auf alle Funktionen.</p>
+
+    <div class="is-features">
+      <div class="is-feature">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M13 4H3v16h10V4z"/><path d="M17 8l4 4-4 4"/></svg>
+        Stalltor steuern
+      </div>
+      <div class="is-feature">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        Live-Kamera
+      </div>
+      <div class="is-feature">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        Push-Alerts
+      </div>
+      <div class="is-feature">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+        Auto-Befüllung
+      </div>
+    </div>
+
+    <button class="is-install-btn" id="is-btn" onclick="promptInstall()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <path d="M12 3v13M5 14l7 7 7-7"/>
+        <path d="M3 21h18"/>
+      </svg>
+      App installieren
+    </button>
+
+    <p class="is-hint" id="is-hint">Chrome erkennt die App automatisch – tippe auf "Installieren".</p>
+    <p class="is-version">Version 0.1.0 · Demo</p>
+  </div>
+</div>
 
 <div id="app">
 
@@ -1077,26 +1277,53 @@
     navigator.serviceWorker.register('./sw.js').catch(() => {});
   }
 
+  // ─── INSTALL SCREEN LOGIC ────────────────────────────────────
+  const isStandalone =
+    window.matchMedia('(display-mode: standalone)').matches ||
+    window.navigator.standalone === true;
+
+  function showApp() {
+    const screen = document.getElementById('install-screen');
+    const app = document.getElementById('app');
+    screen.classList.add('hiding');
+    setTimeout(() => { screen.style.display = 'none'; }, 500);
+    app.style.display = 'flex';
+  }
+
+  // Already installed → skip screen immediately
+  if (isStandalone) {
+    document.getElementById('install-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+  }
+
   // ─── INSTALL PROMPT ──────────────────────────────────────────
   let deferredPrompt = null;
 
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
-    const banner = document.getElementById('install-banner');
-    banner.style.display = 'flex';
-    banner.style.animation = 'slideUp 0.4s ease';
+    // Update hint text now that Chrome is ready
+    const hint = document.getElementById('is-hint');
+    if (hint) hint.textContent = 'Chrome ist bereit – tippe auf "App installieren".';
+  });
+
+  window.addEventListener('appinstalled', () => {
+    showApp();
   });
 
   function promptInstall() {
     if (deferredPrompt) {
       deferredPrompt.prompt();
-      deferredPrompt.userChoice.then(() => {
+      deferredPrompt.userChoice.then(choice => {
         deferredPrompt = null;
-        document.getElementById('install-banner').style.display = 'none';
+        if (choice.outcome === 'accepted') showApp();
       });
+    } else if (isStandalone) {
+      showApp();
     } else {
-      toast('Öffne diese Seite in Chrome/Edge → Menü → "Zum Startbildschirm"');
+      const hint = document.getElementById('is-hint');
+      hint.textContent = 'Tippe in Chrome oben rechts auf die drei Punkte → "Zum Startbildschirm hinzufügen".';
+      hint.style.color = 'var(--amber)';
     }
   }
 
