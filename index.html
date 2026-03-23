@@ -407,16 +407,16 @@
     Steuere deinen Hühnerstall komplett über eine native Android-App –
     Tor, Licht, Futter, Wasser und Live-Kamera, alles in Echtzeit.
   </p>
-  <button class="webapp-btn" onclick="downloadApp()">
+  <a href="./huehnerapp.html" class="webapp-btn">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M12 3v13M5 14l7 7 7-7"/>
-      <path d="M3 21h18"/>
+      <circle cx="12" cy="12" r="10"/>
+      <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
     </svg>
     <span>
-      Web-App herunterladen
-      <span class="btn-note">Einzel-Datei · Als PWA installierbar</span>
+      App öffnen &amp; installieren
+      <span class="btn-note">Direkt im Browser · PWA-Installation</span>
     </span>
-  </button>
+  </a>
 </section>
 
 <div class="scene">
@@ -623,16 +623,16 @@
       <div class="stack-chip"><span class="dot dot-green"></span>WebRTC / RTSP</div>
     </div>
 
-    <button class="webapp-btn" onclick="downloadApp()">
+    <a href="./huehnerapp.html" class="webapp-btn">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M12 3v13M5 14l7 7 7-7"/>
-        <path d="M3 21h18"/>
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
       </svg>
       <span>
-        Web-App herunterladen
-        <span class="btn-note">Einzel-Datei · Als PWA installierbar</span>
+        App öffnen &amp; installieren
+        <span class="btn-note">Direkt im Browser · PWA-Installation</span>
       </span>
-    </button>
+    </a>
   </div>
 
 </div>
@@ -641,38 +641,5 @@
   <p>Open Source · <a href="https://github.com/DEIN-USERNAME/huehnerapp">github.com/DEIN-USERNAME/huehnerapp</a></p>
 </footer>
 
-<style>
-  button.webapp-btn {
-    border: none;
-    cursor: pointer;
-    font-family: 'Outfit', sans-serif;
-  }
-</style>
-<script>
-  async function downloadApp() {
-    const btn = document.querySelector('.webapp-btn');
-    const original = btn.innerHTML;
-    btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="2" x2="12" y2="22"/><polyline points="6 16 12 22 18 16"/></svg><span>Wird geladen…<span class="btn-note">Bitte warten</span></span>`;
-    btn.style.opacity = '0.7';
-    try {
-      const res = await fetch('./huehnerapp.html');
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'huehnerapp.html';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(() => URL.revokeObjectURL(url), 5000);
-      btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg><span>Download gestartet!<span class="btn-note">Datei in deinen Downloads</span></span>`;
-      setTimeout(() => { btn.innerHTML = original; btn.style.opacity = '1'; }, 3000);
-    } catch {
-      btn.innerHTML = original;
-      btn.style.opacity = '1';
-      alert('Download fehlgeschlagen. Stelle sicher, dass beide Dateien im gleichen Ordner auf GitHub Pages sind.');
-    }
-  }
-</script>
 </body>
 </html>
