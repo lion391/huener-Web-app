@@ -9,18 +9,13 @@
 <style>
   :root {
     --bg: #0d1a0f;
-    --bg2: #111e13;
     --card: #162018;
-    --card2: #1c2a1e;
     --border: #2a3d2c;
     --green: #4ade80;
     --green-dim: #22c55e55;
     --amber: #fbbf24;
-    --amber-dim: #f59e0b33;
     --red: #f87171;
-    --red-dim: #ef444433;
     --blue: #60a5fa;
-    --blue-dim: #3b82f633;
     --text: #e8f5e9;
     --text-dim: #6b8f6e;
     --text-muted: #3d5c40;
@@ -36,7 +31,6 @@
     overflow-x: hidden;
   }
 
-  /* Background texture */
   body::before {
     content: '';
     position: fixed;
@@ -48,7 +42,6 @@
     z-index: 0;
   }
 
-  /* ─── HERO ─── */
   .hero {
     position: relative;
     z-index: 1;
@@ -95,10 +88,7 @@
     margin-bottom: 16px;
   }
 
-  h1 span {
-    font-style: italic;
-    color: var(--amber);
-  }
+  h1 span { font-style: italic; color: var(--amber); }
 
   .hero-sub {
     font-size: 16px;
@@ -109,8 +99,7 @@
     font-weight: 300;
   }
 
-  /* ─── DOWNLOAD BUTTON ─── */
-  .download-btn {
+  .webapp-btn {
     display: inline-flex;
     align-items: center;
     gap: 12px;
@@ -127,13 +116,13 @@
     letter-spacing: 0.01em;
   }
 
-  .download-btn:hover {
+  .webapp-btn:hover {
     background: #6ee7a0;
     transform: translateY(-2px);
     box-shadow: 0 0 40px #4ade8055, 0 8px 30px #00000055;
   }
 
-  .download-btn svg { width: 20px; height: 20px; flex-shrink: 0; }
+  .webapp-btn svg { width: 20px; height: 20px; flex-shrink: 0; }
 
   .btn-note {
     display: block;
@@ -143,7 +132,6 @@
     margin-top: 2px;
   }
 
-  /* ─── LAYOUT ─── */
   .scene {
     position: relative;
     z-index: 1;
@@ -155,7 +143,6 @@
     flex-wrap: wrap;
   }
 
-  /* ─── PHONE FRAME ─── */
   .phone-wrap {
     flex-shrink: 0;
     position: sticky;
@@ -168,35 +155,27 @@
     background: #0a0f0b;
     border-radius: 44px;
     border: 2px solid #2a3d2c;
-    box-shadow:
-      0 0 0 1px #1a2d1c,
-      0 40px 80px #00000088,
-      inset 0 1px 0 #3a5a3c33;
+    box-shadow: 0 0 0 1px #1a2d1c, 0 40px 80px #00000088, inset 0 1px 0 #3a5a3c33;
     position: relative;
     overflow: hidden;
   }
 
-  /* Notch */
   .phone::before {
     content: '';
     position: absolute;
-    top: 12px;
-    left: 50%;
+    top: 12px; left: 50%;
     transform: translateX(-50%);
-    width: 110px;
-    height: 28px;
+    width: 110px; height: 28px;
     background: #0a0f0b;
     border-radius: 999px;
     z-index: 10;
     border: 1.5px solid #2a3d2c;
   }
 
-  /* Dynamic island dot */
   .phone::after {
     content: '';
     position: absolute;
-    top: 19px;
-    left: 50%;
+    top: 19px; left: 50%;
     transform: translateX(-50%);
     width: 10px; height: 10px;
     background: #1a2d1c;
@@ -204,496 +183,215 @@
     z-index: 11;
   }
 
-  /* Side buttons */
-  .phone-btn-right {
-    position: absolute;
-    right: -3px;
-    top: 120px;
-    width: 3px;
-    height: 70px;
-    background: #2a3d2c;
-    border-radius: 0 3px 3px 0;
-  }
+  .phone-btn-right { position: absolute; right: -3px; top: 120px; width: 3px; height: 70px; background: #2a3d2c; border-radius: 0 3px 3px 0; }
+  .phone-btn-left1 { position: absolute; left: -3px; top: 100px; width: 3px; height: 35px; background: #2a3d2c; border-radius: 3px 0 0 3px; }
+  .phone-btn-left2 { position: absolute; left: -3px; top: 148px; width: 3px; height: 50px; background: #2a3d2c; border-radius: 3px 0 0 3px; }
+  .phone-btn-left3 { position: absolute; left: -3px; top: 210px; width: 3px; height: 50px; background: #2a3d2c; border-radius: 3px 0 0 3px; }
 
-  .phone-btn-left1 {
-    position: absolute;
-    left: -3px;
-    top: 100px;
-    width: 3px;
-    height: 35px;
-    background: #2a3d2c;
-    border-radius: 3px 0 0 3px;
-  }
-
-  .phone-btn-left2 {
-    position: absolute;
-    left: -3px;
-    top: 148px;
-    width: 3px;
-    height: 50px;
-    background: #2a3d2c;
-    border-radius: 3px 0 0 3px;
-  }
-
-  .phone-btn-left3 {
-    position: absolute;
-    left: -3px;
-    top: 210px;
-    width: 3px;
-    height: 50px;
-    background: #2a3d2c;
-    border-radius: 3px 0 0 3px;
-  }
-
-  /* ─── APP SCREEN ─── */
   .screen {
-    position: absolute;
-    inset: 0;
+    position: absolute; inset: 0;
     border-radius: 42px;
     background: #0d1a0f;
-    overflow-y: auto;
-    overflow-x: hidden;
+    overflow-y: auto; overflow-x: hidden;
     padding: 55px 0 16px;
     scrollbar-width: none;
   }
-
   .screen::-webkit-scrollbar { display: none; }
 
-  /* Status bar */
   .status-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 20px;
-    margin-bottom: 16px;
-    font-size: 11px;
-    font-family: 'DM Mono', monospace;
-    color: var(--text-dim);
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0 20px; margin-bottom: 16px;
+    font-size: 11px; font-family: 'DM Mono', monospace; color: var(--text-dim);
   }
-
   .status-icons { display: flex; gap: 4px; align-items: center; }
 
-  /* App header */
   .app-header {
     padding: 0 18px 14px;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
+    display: flex; justify-content: space-between; align-items: flex-start;
   }
-
-  .app-title-small {
-    font-size: 10px;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    font-weight: 500;
-    margin-bottom: 2px;
-  }
-
-  .app-title-big {
-    font-family: 'DM Serif Display', serif;
-    font-size: 22px;
-    color: var(--text);
-    line-height: 1.1;
-  }
-
+  .app-title-small { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 500; margin-bottom: 2px; }
+  .app-title-big { font-family: 'DM Serif Display', serif; font-size: 22px; color: var(--text); line-height: 1.1; }
   .avatar {
-    width: 34px; height: 34px;
-    border-radius: 50%;
+    width: 34px; height: 34px; border-radius: 50%;
     background: linear-gradient(135deg, var(--green), #16a34a);
     display: flex; align-items: center; justify-content: center;
-    font-size: 14px;
-    font-weight: 700;
-    color: #0a1a0c;
-    flex-shrink: 0;
+    font-size: 14px; font-weight: 700; color: #0a1a0c; flex-shrink: 0;
   }
 
-  /* Status card */
   .status-card {
     margin: 0 12px 12px;
     background: linear-gradient(135deg, #1c3a20, #152b18);
-    border: 1px solid #2d4a30;
-    border-radius: 18px;
-    padding: 14px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
+    border: 1px solid #2d4a30; border-radius: 18px;
+    padding: 14px; display: flex; align-items: center; gap: 12px;
   }
-
   .status-icon-big {
-    width: 42px; height: 42px;
-    border-radius: 12px;
+    width: 42px; height: 42px; border-radius: 12px;
     background: var(--green-dim);
     display: flex; align-items: center; justify-content: center;
-    font-size: 20px;
-    flex-shrink: 0;
+    flex-shrink: 0; color: var(--green);
   }
-
+  .status-icon-big svg { width: 22px; height: 22px; }
   .status-label { font-size: 11px; color: var(--text-muted); margin-bottom: 2px; }
   .status-value { font-size: 15px; font-weight: 600; color: var(--text); }
   .status-time { font-size: 10px; color: var(--green); margin-top: 1px; font-family: 'DM Mono', monospace; }
-
-  .sensor-chips {
-    margin-left: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    align-items: flex-end;
-  }
-
+  .sensor-chips { margin-left: auto; display: flex; flex-direction: column; gap: 4px; align-items: flex-end; }
   .chip {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    background: #ffffff0d;
-    border-radius: 999px;
-    padding: 3px 8px;
-    font-size: 10px;
-    color: var(--text-dim);
-    font-family: 'DM Mono', monospace;
+    display: flex; align-items: center; gap: 4px;
+    background: #ffffff0d; border-radius: 999px;
+    padding: 3px 8px; font-size: 10px;
+    color: var(--text-dim); font-family: 'DM Mono', monospace;
   }
+  .chip svg { width: 10px; height: 10px; }
 
-  /* Section label */
   .section-label {
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    color: var(--text-muted);
-    font-weight: 600;
-    padding: 0 14px;
-    margin-bottom: 8px;
-    margin-top: 4px;
+    font-size: 10px; text-transform: uppercase;
+    letter-spacing: 0.12em; color: var(--text-muted);
+    font-weight: 600; padding: 0 14px;
+    margin-bottom: 8px; margin-top: 4px;
   }
 
-  /* Control grid */
   .ctrl-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    padding: 0 12px;
-    margin-bottom: 12px;
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 8px; padding: 0 12px; margin-bottom: 12px;
   }
-
   .ctrl-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 14px 12px;
-    cursor: pointer;
-    transition: all 0.2s;
-    position: relative;
-    overflow: hidden;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 16px; padding: 14px 12px;
+    cursor: pointer; position: relative; overflow: hidden;
   }
-
   .ctrl-card.active { border-color: var(--green); background: #1e3522; }
   .ctrl-card.active-amber { border-color: var(--amber); background: #2a2010; }
   .ctrl-card.active-blue { border-color: var(--blue); background: #101e2a; }
-
   .ctrl-card::after {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 1px;
+    content: ''; position: absolute;
+    top: 0; left: 0; right: 0; height: 1px;
     background: linear-gradient(90deg, transparent, #ffffff15, transparent);
   }
-
-  .ctrl-icon {
-    font-size: 22px;
-    margin-bottom: 10px;
-    display: block;
-  }
-
-  .ctrl-name {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text);
-    margin-bottom: 3px;
-  }
-
-  .ctrl-state {
-    font-size: 10px;
-    font-family: 'DM Mono', monospace;
-  }
-
+  .ctrl-icon { width: 22px; height: 22px; margin-bottom: 10px; display: block; color: var(--text-muted); }
+  .ctrl-card.active .ctrl-icon { color: var(--green); }
+  .ctrl-card.active-amber .ctrl-icon { color: var(--amber); }
+  .ctrl-card.active-blue .ctrl-icon { color: var(--blue); }
+  .ctrl-name { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+  .ctrl-state { font-size: 10px; font-family: 'DM Mono', monospace; }
   .ctrl-state.on { color: var(--green); }
   .ctrl-state.off { color: var(--text-muted); }
   .ctrl-state.amber { color: var(--amber); }
   .ctrl-state.blue { color: var(--blue); }
 
-  /* Toggle */
   .toggle {
-    position: absolute;
-    top: 12px; right: 12px;
-    width: 28px; height: 16px;
-    background: var(--border);
-    border-radius: 999px;
-    transition: background 0.2s;
+    position: absolute; top: 12px; right: 12px;
+    width: 28px; height: 16px; background: var(--border); border-radius: 999px; transition: background 0.2s;
   }
-
   .toggle::after {
-    content: '';
-    position: absolute;
-    top: 2px; left: 2px;
-    width: 12px; height: 12px;
-    border-radius: 50%;
-    background: var(--text-muted);
-    transition: all 0.2s;
+    content: ''; position: absolute; top: 2px; left: 2px;
+    width: 12px; height: 12px; border-radius: 50%; background: var(--text-muted); transition: all 0.2s;
   }
-
   .toggle.on { background: var(--green); }
   .toggle.on::after { left: 14px; background: #0a1a0c; }
-
   .toggle.on-amber { background: var(--amber); }
   .toggle.on-amber::after { left: 14px; background: #0a1a0c; }
-
   .toggle.on-blue { background: var(--blue); }
   .toggle.on-blue::after { left: 14px; background: #0a1a0c; }
 
-  /* Camera preview */
   .cam-card {
     margin: 0 12px 12px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    overflow: hidden;
+    background: var(--card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden;
   }
-
-  .cam-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 14px 8px;
-  }
-
+  .cam-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px 8px; }
   .cam-title { font-size: 12px; font-weight: 600; color: var(--text); }
-
   .live-badge {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 9px;
-    font-family: 'DM Mono', monospace;
-    color: var(--red);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
+    display: flex; align-items: center; gap: 4px;
+    font-size: 9px; font-family: 'DM Mono', monospace;
+    color: var(--red); text-transform: uppercase; letter-spacing: 0.08em;
   }
-
   .live-badge::before {
-    content: '';
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: var(--red);
-    animation: pulse 1.5s infinite;
+    content: ''; width: 6px; height: 6px;
+    border-radius: 50%; background: var(--red); animation: pulse 1.5s infinite;
   }
-
   .cam-preview {
     height: 90px;
     background:
-      repeating-linear-gradient(
-        0deg,
-        #0d1a0f 0px, #0d1a0f 1px,
-        transparent 1px, transparent 20px
-      ),
-      repeating-linear-gradient(
-        90deg,
-        #162018 0px, #162018 1px,
-        transparent 1px, transparent 20px
-      ),
+      repeating-linear-gradient(0deg, #0d1a0f 0px, #0d1a0f 1px, transparent 1px, transparent 20px),
+      repeating-linear-gradient(90deg, #162018 0px, #162018 1px, transparent 1px, transparent 20px),
       linear-gradient(135deg, #0d1a0f 0%, #162018 50%, #0f1e11 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
+    display: flex; align-items: center; justify-content: center;
   }
-
   .cam-preview-text {
-    font-size: 10px;
-    color: var(--text-muted);
-    font-family: 'DM Mono', monospace;
-    background: #ffffff08;
-    padding: 4px 10px;
-    border-radius: 6px;
-    border: 1px solid var(--border);
+    font-size: 10px; color: var(--text-muted); font-family: 'DM Mono', monospace;
+    background: #ffffff08; padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border);
   }
+  .cam-tabs { display: flex; padding: 8px; gap: 6px; }
+  .cam-tab { flex: 1; text-align: center; font-size: 10px; padding: 5px; border-radius: 8px; font-weight: 500; cursor: pointer; }
+  .cam-tab.active { background: var(--green-dim); color: var(--green); border: 1px solid #4ade8033; }
+  .cam-tab.inactive { color: var(--text-muted); border: 1px solid transparent; }
 
-  .cam-tabs {
-    display: flex;
-    padding: 8px;
-    gap: 6px;
-  }
-
-  .cam-tab {
-    flex: 1;
-    text-align: center;
-    font-size: 10px;
-    padding: 5px;
-    border-radius: 8px;
-    font-weight: 500;
-    cursor: pointer;
-  }
-
-  .cam-tab.active {
-    background: var(--green-dim);
-    color: var(--green);
-    border: 1px solid #4ade8033;
-  }
-
-  .cam-tab.inactive {
-    color: var(--text-muted);
-    border: 1px solid transparent;
-  }
-
-  /* Feed schedule */
   .schedule-card {
     margin: 0 12px 12px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 12px;
+    background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 12px;
   }
-
   .schedule-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 7px 0;
-    border-bottom: 1px solid #ffffff08;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 7px 0; border-bottom: 1px solid #ffffff08;
   }
-
   .schedule-row:last-child { border-bottom: none; }
-
   .sched-left { display: flex; align-items: center; gap: 8px; }
-  .sched-icon { font-size: 16px; }
+  .sched-icon { width: 16px; height: 16px; color: var(--text-muted); flex-shrink: 0; }
   .sched-name { font-size: 11px; font-weight: 600; color: var(--text); }
   .sched-time { font-size: 10px; color: var(--text-muted); font-family: 'DM Mono', monospace; }
   .sched-pct { font-size: 11px; font-weight: 600; }
   .sched-pct.full { color: var(--green); }
   .sched-pct.low { color: var(--red); }
 
-  /* Bottom nav */
   .bottom-nav {
-    position: sticky;
-    bottom: 0;
-    background: #0a0f0b;
-    border-top: 1px solid var(--border);
-    display: flex;
-    padding: 8px 0 14px;
+    position: sticky; bottom: 0;
+    background: #0a0f0b; border-top: 1px solid var(--border);
+    display: flex; padding: 8px 0 14px;
   }
-
   .nav-item {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 3px;
-    font-size: 9px;
-    font-weight: 500;
-    color: var(--text-muted);
-    cursor: pointer;
-    padding-top: 2px;
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; gap: 3px; font-size: 9px;
+    font-weight: 500; color: var(--text-muted); cursor: pointer; padding-top: 2px;
   }
-
   .nav-item.active { color: var(--green); }
+  .nav-icon { width: 18px; height: 18px; }
 
-  .nav-icon { font-size: 18px; line-height: 1; }
-
-  /* ─── INFO PANEL ─── */
-  .info-panel {
-    max-width: 380px;
-    flex-shrink: 0;
-    align-self: flex-start;
-  }
-
-  .info-title {
-    font-family: 'DM Serif Display', serif;
-    font-size: 28px;
-    color: var(--text);
-    margin-bottom: 6px;
-    line-height: 1.1;
-  }
-
-  .info-title em {
-    font-style: italic;
-    color: var(--amber);
-  }
-
-  .info-sub {
-    font-size: 13px;
-    color: var(--text-dim);
-    line-height: 1.6;
-    margin-bottom: 28px;
-    font-weight: 300;
-  }
+  .info-panel { max-width: 380px; flex-shrink: 0; align-self: flex-start; }
+  .info-title { font-family: 'DM Serif Display', serif; font-size: 28px; color: var(--text); margin-bottom: 6px; line-height: 1.1; }
+  .info-title em { font-style: italic; color: var(--amber); }
+  .info-sub { font-size: 13px; color: var(--text-dim); line-height: 1.6; margin-bottom: 28px; font-weight: 300; }
 
   .feature-list { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
-
   .feature-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    padding: 12px 14px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    transition: border-color 0.2s;
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 12px 14px; background: var(--card);
+    border: 1px solid var(--border); border-radius: 14px; transition: border-color 0.2s;
   }
-
   .feature-item:hover { border-color: var(--green); }
-
-  .fi-icon {
-    font-size: 20px;
-    flex-shrink: 0;
-    margin-top: 1px;
-  }
-
+  .fi-icon { width: 20px; height: 20px; flex-shrink: 0; margin-top: 1px; color: var(--text-dim); }
   .fi-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
   .fi-desc { font-size: 11px; color: var(--text-dim); line-height: 1.5; font-weight: 300; }
 
-  .stack-chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 7px;
-    margin-bottom: 28px;
-  }
-
+  .stack-chips { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 28px; }
   .stack-chip {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    padding: 5px 12px;
-    font-size: 11px;
-    font-family: 'DM Mono', monospace;
-    color: var(--text-dim);
+    display: flex; align-items: center; gap: 5px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 999px; padding: 5px 12px;
+    font-size: 11px; font-family: 'DM Mono', monospace; color: var(--text-dim);
   }
-
-  .stack-chip .dot {
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-
+  .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
   .dot-green { background: var(--green); }
   .dot-amber { background: var(--amber); }
   .dot-blue { background: var(--blue); }
   .dot-red { background: var(--red); }
 
-  /* ─── FOOTER ─── */
   footer {
-    position: relative;
-    z-index: 1;
-    text-align: center;
-    padding: 0 24px 48px;
-    color: var(--text-muted);
-    font-size: 12px;
+    position: relative; z-index: 1;
+    text-align: center; padding: 0 24px 48px;
+    color: var(--text-muted); font-size: 12px;
   }
-
   footer a { color: var(--text-dim); text-decoration: none; }
   footer a:hover { color: var(--green); }
 
-  /* ─── RESPONSIVE ─── */
   @media (max-width: 700px) {
     .info-panel { order: -1; max-width: 100%; }
     .phone-wrap { position: relative; top: 0; }
@@ -702,30 +400,27 @@
 </head>
 <body>
 
-<!-- HERO -->
 <section class="hero">
-  <div class="hero-badge">🐔 Open Source Projekt</div>
+  <div class="hero-badge">Open Source Projekt</div>
   <h1>Hühnerstall,<br><span>smart gemacht.</span></h1>
   <p class="hero-sub">
     Steuere deinen Hühnerstall komplett über eine native Android-App –
     Tor, Licht, Futter, Wasser und Live-Kamera, alles in Echtzeit.
   </p>
-  <a href="https://github.com/DEIN-USERNAME/huehnerapp/releases" class="download-btn" download>
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M12 3v13M5 14l7 7 7-7"/>
-      <path d="M3 21h18"/>
+  <a href="https://DEIN-USERNAME.github.io/huehnerapp/app" class="webapp-btn" target="_blank">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"/>
+      <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
     </svg>
     <span>
-      APK herunterladen
-      <span class="btn-note">Android 8.0+ · ~4 MB · Kostenlos</span>
+      Web-App testen
+      <span class="btn-note">Direkt im Browser · Kein Download nötig</span>
     </span>
   </a>
 </section>
 
-<!-- MAIN SCENE -->
 <div class="scene">
 
-  <!-- PHONE MOCKUP -->
   <div class="phone-wrap">
     <div class="phone">
       <div class="phone-btn-right"></div>
@@ -734,7 +429,6 @@
       <div class="phone-btn-left3"></div>
 
       <div class="screen">
-        <!-- Status bar -->
         <div class="status-bar">
           <span>09:41</span>
           <div class="status-icons">
@@ -744,63 +438,63 @@
           </div>
         </div>
 
-        <!-- App header -->
         <div class="app-header">
           <div>
             <div class="app-title-small">Willkommen zurück</div>
-            <div class="app-title-big">Mein Stall 🏡</div>
+            <div class="app-title-big">Mein Stall</div>
           </div>
           <div class="avatar">B</div>
         </div>
 
-        <!-- Status card -->
         <div class="status-card">
-          <div class="status-icon-big">🐔</div>
+          <div class="status-icon-big">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          </div>
           <div>
             <div class="status-label">Stallstatus</div>
             <div class="status-value">Alles OK</div>
             <div class="status-time">Zuletzt: vor 12 Sek.</div>
           </div>
           <div class="sensor-chips">
-            <div class="chip">🌡 18.5°C</div>
-            <div class="chip">💧 64%</div>
+            <div class="chip">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/></svg>
+              18.5°C
+            </div>
+            <div class="chip">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+              64%
+            </div>
           </div>
         </div>
 
-        <!-- Controls -->
         <div class="section-label">Steuerung</div>
         <div class="ctrl-grid">
-          <!-- Door -->
           <div class="ctrl-card active">
             <div class="toggle on"></div>
-            <span class="ctrl-icon">🚪</span>
+            <svg class="ctrl-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 4H3v16h10V4z"/><path d="M17 8l4 4-4 4"/><path d="M21 12H9"/></svg>
             <div class="ctrl-name">Tor</div>
             <div class="ctrl-state on">Offen</div>
           </div>
-          <!-- Light -->
           <div class="ctrl-card active-amber">
             <div class="toggle on-amber"></div>
-            <span class="ctrl-icon">💡</span>
+            <svg class="ctrl-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
             <div class="ctrl-name">Licht</div>
             <div class="ctrl-state amber">An · 40%</div>
           </div>
-          <!-- Feeder -->
           <div class="ctrl-card">
             <div class="toggle"></div>
-            <span class="ctrl-icon">🌾</span>
+            <svg class="ctrl-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
             <div class="ctrl-name">Futterspender</div>
             <div class="ctrl-state off">Automatisch</div>
           </div>
-          <!-- Water -->
           <div class="ctrl-card active-blue">
             <div class="toggle on-blue"></div>
-            <span class="ctrl-icon">💧</span>
+            <svg class="ctrl-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
             <div class="ctrl-name">Wasser</div>
             <div class="ctrl-state blue">Auffüllen…</div>
           </div>
         </div>
 
-        <!-- Camera -->
         <div class="section-label">Kamera</div>
         <div class="cam-card">
           <div class="cam-header">
@@ -808,7 +502,7 @@
             <div class="live-badge">Live</div>
           </div>
           <div class="cam-preview">
-            <div class="cam-preview-text">● RTSP Stream aktiv</div>
+            <div class="cam-preview-text">RTSP Stream aktiv</div>
           </div>
           <div class="cam-tabs">
             <div class="cam-tab active">Innen</div>
@@ -817,12 +511,11 @@
           </div>
         </div>
 
-        <!-- Schedule -->
-        <div class="section-label">Zeitplan & Füllstand</div>
+        <div class="section-label">Zeitplan &amp; Füllstand</div>
         <div class="schedule-card">
           <div class="schedule-row">
             <div class="sched-left">
-              <span class="sched-icon">🌅</span>
+              <svg class="sched-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/></svg>
               <div>
                 <div class="sched-name">Tor öffnen</div>
                 <div class="sched-time">tägl. 07:00</div>
@@ -832,7 +525,7 @@
           </div>
           <div class="schedule-row">
             <div class="sched-left">
-              <span class="sched-icon">🌾</span>
+              <svg class="sched-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
               <div>
                 <div class="sched-name">Futter</div>
                 <div class="sched-time">tägl. 08:00 / 17:00</div>
@@ -842,32 +535,31 @@
           </div>
           <div class="schedule-row">
             <div class="sched-left">
-              <span class="sched-icon">🪣</span>
+              <svg class="sched-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
               <div>
                 <div class="sched-name">Wasser</div>
                 <div class="sched-time">bei &lt; 20%</div>
               </div>
             </div>
-            <div class="sched-pct low">12% ⚠</div>
+            <div class="sched-pct low">12%</div>
           </div>
         </div>
 
-        <!-- Bottom nav -->
         <div class="bottom-nav">
           <div class="nav-item active">
-            <span class="nav-icon">🏠</span>
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
             Start
           </div>
           <div class="nav-item">
-            <span class="nav-icon">📷</span>
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
             Kamera
           </div>
           <div class="nav-item">
-            <span class="nav-icon">📅</span>
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
             Zeitplan
           </div>
           <div class="nav-item">
-            <span class="nav-icon">⚙️</span>
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
             Einst.
           </div>
         </div>
@@ -875,48 +567,47 @@
     </div>
   </div>
 
-  <!-- INFO PANEL -->
   <div class="info-panel">
     <div class="info-title">Ein Stall.<br><em>Volle Kontrolle.</em></div>
     <p class="info-sub">
       Native Android-App für die smarte Steuerung deines Hühnerstalls –
-      gebaut mit Firebase Realtime Database & Raspberry Pi 5.
+      gebaut mit Firebase Realtime Database &amp; Raspberry Pi 5.
     </p>
 
     <ul class="feature-list">
       <li class="feature-item">
-        <span class="fi-icon">🚪</span>
+        <svg class="fi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 4H3v16h10V4z"/><path d="M17 8l4 4-4 4"/><path d="M21 12H9"/></svg>
         <div>
           <div class="fi-title">Automatisches Stalltor</div>
-          <div class="fi-desc">Per App oder Zeitplan öffnen & schliessen. Mit GPIO-Relais & DC-Motor am Pi gesteuert.</div>
+          <div class="fi-desc">Per App oder Zeitplan öffnen &amp; schliessen. Mit GPIO-Relais &amp; DC-Motor am Pi gesteuert.</div>
         </div>
       </li>
       <li class="feature-item">
-        <span class="fi-icon">📷</span>
+        <svg class="fi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
         <div>
-          <div class="fi-title">Live-Kamera (innen & aussen)</div>
+          <div class="fi-title">Live-Kamera (innen &amp; aussen)</div>
           <div class="fi-desc">RTSP-Stream direkt in der App. Snapshots werden in Firebase Storage gespeichert.</div>
         </div>
       </li>
       <li class="feature-item">
-        <span class="fi-icon">🌾</span>
+        <svg class="fi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
         <div>
-          <div class="fi-title">Futter & Wasser automatisch</div>
-          <div class="fi-desc">Peristaltikpumpe & Servo per Zeitplan oder manuell. Füllstand-Sensor zeigt Warnungen.</div>
+          <div class="fi-title">Futter &amp; Wasser automatisch</div>
+          <div class="fi-desc">Peristaltikpumpe &amp; Servo per Zeitplan oder manuell. Füllstand-Sensor zeigt Warnungen.</div>
         </div>
       </li>
       <li class="feature-item">
-        <span class="fi-icon">💡</span>
+        <svg class="fi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/></svg>
         <div>
-          <div class="fi-title">Lichtsteuerung & Sensoren</div>
-          <div class="fi-desc">Dimmbares Licht per Relais. Temperatur & Luftfeuchtigkeit via DHT22 in Echtzeit.</div>
+          <div class="fi-title">Lichtsteuerung &amp; Sensoren</div>
+          <div class="fi-desc">Dimmbares Licht per Relais. Temperatur &amp; Luftfeuchtigkeit via DHT22 in Echtzeit.</div>
         </div>
       </li>
       <li class="feature-item">
-        <span class="fi-icon">🔔</span>
+        <svg class="fi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
         <div>
           <div class="fi-title">Push-Benachrichtigungen</div>
-          <div class="fi-desc">Wasser leer? Temperatur zu hoch? Du bekommst sofort eine Meldung via FCM.</div>
+          <div class="fi-desc">Wasser leer? Temperatur zu hoch? Sofortige Meldung via Firebase Cloud Messaging.</div>
         </div>
       </li>
     </ul>
@@ -932,23 +623,22 @@
       <div class="stack-chip"><span class="dot dot-green"></span>WebRTC / RTSP</div>
     </div>
 
-    <a href="https://github.com/DEIN-USERNAME/huehnerapp/releases" class="download-btn">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M12 3v13M5 14l7 7 7-7"/>
-        <path d="M3 21h18"/>
+    <a href="https://DEIN-USERNAME.github.io/huehnerapp/app" class="webapp-btn" target="_blank">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
       </svg>
       <span>
-        APK herunterladen
-        <span class="btn-note">Android 8.0+ · ~4 MB · Kostenlos</span>
+        Web-App testen
+        <span class="btn-note">Direkt im Browser · Kein Download nötig</span>
       </span>
     </a>
   </div>
 
 </div>
 
-<!-- FOOTER -->
 <footer>
-  <p>Built with ❤️ · <a href="https://github.com/DEIN-USERNAME/huehnerapp">github.com/DEIN-USERNAME/huehnerapp</a> · Open Source</p>
+  <p>Open Source · <a href="https://github.com/DEIN-USERNAME/huehnerapp">github.com/DEIN-USERNAME/huehnerapp</a></p>
 </footer>
 
 </body>
