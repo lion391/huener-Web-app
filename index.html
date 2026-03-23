@@ -858,7 +858,7 @@
   }
 
   /* Hide app shell until installed */
-  #app { display: none; }
+  #app { display: none !important; }
 
   /* Transition */
   #install-screen.hiding {
@@ -1282,19 +1282,12 @@
     window.matchMedia('(display-mode: standalone)').matches ||
     window.navigator.standalone === true;
 
-  function showApp() {
-    const screen = document.getElementById('install-screen');
-    const app = document.getElementById('app');
-    screen.classList.add('hiding');
-    setTimeout(() => { screen.style.display = 'none'; }, 500);
-    app.style.display = 'flex';
-  }
-
-  // Already installed → skip screen immediately
   if (isStandalone) {
+    // Running as installed PWA → show app, hide install screen
     document.getElementById('install-screen').style.display = 'none';
-    document.getElementById('app').style.display = 'flex';
+    document.getElementById('app').style.setProperty('display', 'flex', 'important');
   }
+  // Otherwise: install screen stays visible, app stays hidden (CSS default)
 
   // ─── INSTALL PROMPT ──────────────────────────────────────────
   let deferredPrompt = null;
@@ -1302,13 +1295,8 @@
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
-    // Update hint text now that Chrome is ready
     const hint = document.getElementById('is-hint');
     if (hint) hint.textContent = 'Chrome ist bereit – tippe auf "App installieren".';
-  });
-
-  window.addEventListener('appinstalled', () => {
-    showApp();
   });
 
   function promptInstall() {
@@ -1316,10 +1304,15 @@
       deferredPrompt.prompt();
       deferredPrompt.userChoice.then(choice => {
         deferredPrompt = null;
-        if (choice.outcome === 'accepted') showApp();
+        if (choice.outcome === 'accepted') {
+          const btn = document.getElementById('is-btn');
+          btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg> Installiert! App öffnen`;
+          btn.style.background = '#22c55e';
+          const hint = document.getElementById('is-hint');
+          hint.textContent = 'App wurde installiert. Öffne sie vom Startbildschirm.';
+          hint.style.color = 'var(--green)';
+        }
       });
-    } else if (isStandalone) {
-      showApp();
     } else {
       const hint = document.getElementById('is-hint');
       hint.textContent = 'Tippe in Chrome oben rechts auf die drei Punkte → "Zum Startbildschirm hinzufügen".';
