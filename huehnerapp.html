@@ -8,6 +8,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="HühnerstApp">
 <meta name="description" content="Smarter Hühnerstall Controller">
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./icon-192.png">
 <title>HühnerstApp</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -1070,120 +1072,9 @@
 
 <script>
   // ─── PWA MANIFEST (inline) ───────────────────────────────────
-  // ─── ICON GENERATOR ──────────────────────────────────────────
-  function makeIcon(size) {
-    const c = document.createElement('canvas');
-    c.width = c.height = size;
-    const ctx = c.getContext('2d');
-    // Background (filled square – required for maskable)
-    ctx.fillStyle = '#0d1a0f';
-    ctx.fillRect(0, 0, size, size);
-    // Rounded rect on top
-    ctx.fillStyle = '#162018';
-    ctx.beginPath();
-    ctx.roundRect(size*0.08, size*0.08, size*0.84, size*0.84, size*0.18);
-    ctx.fill();
-    // House outline
-    const s = size * 0.52, ox = (size - s) / 2, oy = size * 0.22;
-    ctx.strokeStyle = '#4ade80';
-    ctx.lineWidth = size * 0.055;
-    ctx.lineJoin = 'round';
-    ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.moveTo(ox, oy + s * 0.44);
-    ctx.lineTo(ox + s / 2, oy);
-    ctx.lineTo(ox + s, oy + s * 0.44);
-    ctx.lineTo(ox + s, oy + s);
-    ctx.lineTo(ox, oy + s);
-    ctx.closePath();
-    ctx.stroke();
-    // Door
-    ctx.fillStyle = '#4ade80';
-    const dw = s * 0.28, dh = s * 0.42;
-    const dx = ox + (s - dw) / 2, dy = oy + s - dh;
-    ctx.beginPath();
-    ctx.roundRect(dx, dy, dw, dh, size * 0.03);
-    ctx.fill();
-    return c.toDataURL('image/png');
-  }
-
-  // Generate icons upfront as data URLs
-  const icon192 = makeIcon(192);
-  const icon512 = makeIcon(512);
-
-  // Inject apple-touch-icon for iOS (accepts data URLs fine)
-  const appleLnk = document.createElement('link');
-  appleLnk.rel = 'apple-touch-icon';
-  appleLnk.href = icon192;
-  document.head.appendChild(appleLnk);
-
-  // ─── SERVICE WORKER ───────────────────────────────────────────
-  // The SW intercepts requests for the icon paths and serves the
-  // canvas-generated PNGs – this is required because Chrome's PWA
-  // installer does NOT accept blob: or data: URLs in manifests.
+  // ─── SERVICE WORKER ──────────────────────────────────────────
   if ('serviceWorker' in navigator) {
-    const swCode = `
-      const CACHE = 'huehnerapp-v1';
-      const ICON_192 = '${icon192}';
-      const ICON_512 = '${icon512}';
-
-      function dataUrlToResponse(dataUrl) {
-        const [header, b64] = dataUrl.split(',');
-        const mime = header.match(/:(.*?);/)[1];
-        const bytes = atob(b64);
-        const arr = new Uint8Array(bytes.length);
-        for (let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i);
-        return new Response(arr, { headers: { 'Content-Type': mime } });
-      }
-
-      self.addEventListener('install', e => {
-        self.skipWaiting();
-      });
-      self.addEventListener('activate', e => {
-        e.waitUntil(clients.claim());
-      });
-      self.addEventListener('fetch', e => {
-        const url = e.request.url;
-        if (url.endsWith('/icon-192.png') || url.endsWith('icon-192.png')) {
-          e.respondWith(dataUrlToResponse(ICON_192)); return;
-        }
-        if (url.endsWith('/icon-512.png') || url.endsWith('icon-512.png')) {
-          e.respondWith(dataUrlToResponse(ICON_512)); return;
-        }
-        if (url.endsWith('/manifest.json') || url.endsWith('manifest.json')) {
-          const manifest = {
-            name: "HühnerstApp",
-            short_name: "HühnerstApp",
-            description: "Smarter Hühnerstall Controller",
-            start_url: "./",
-            display: "standalone",
-            background_color: "#0d1a0f",
-            theme_color: "#0d1a0f",
-            orientation: "portrait",
-            icons: [
-              { src: "./icon-192.png", sizes: "192x192", type: "image/png" },
-              { src: "./icon-512.png", sizes: "512x512", type: "image/png", purpose: "any maskable" }
-            ]
-          };
-          e.respondWith(new Response(JSON.stringify(manifest), {
-            headers: { 'Content-Type': 'application/json' }
-          })); return;
-        }
-        e.respondWith(
-          caches.match(e.request).then(r => r || fetch(e.request).catch(() => new Response('')))
-        );
-      });
-    `;
-    const swBlob = new Blob([swCode], { type: 'text/javascript' });
-    const swURL = URL.createObjectURL(swBlob);
-
-    navigator.serviceWorker.register(swURL).then(() => {
-      // Inject manifest link AFTER SW is registered so SW can intercept it
-      const mLink = document.createElement('link');
-      mLink.rel = 'manifest';
-      mLink.href = './manifest.json';
-      document.head.appendChild(mLink);
-    }).catch(() => {});
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
   }
 
   // ─── INSTALL PROMPT ──────────────────────────────────────────
